@@ -303,6 +303,8 @@ node_modules/
 .npm-cache/
 .nuget/
 outputs/
+src/OmniBusiness.Api/.omnibusiness-runtime/
+web/omnibusiness-web/build-output.txt
 
 # Visual Studio 6 build log
 *.plg
