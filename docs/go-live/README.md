@@ -1,7 +1,14 @@
 # SmartX — Phase 1 Supabase Go-Live
 
-This folder is the go-live playbook for taking **SmartX** (the OmniBusiness ERP + POS) live on
-**Supabase Postgres** while keeping the office-laptop install running offline and unchanged.
+This folder is the go-live playbook for taking **SmartX** (the OmniBusiness ERP + POS) live while
+keeping the office-laptop install running offline and unchanged.
+
+Fastest safe path right now:
+
+- first public deploy on `Render` with `LocalJson` plus a persistent disk
+- set a fresh owner password on first boot
+- let the app auto-lock non-owner demo users
+- cut over to `Supabase Postgres` after the hosted flow is verified
 
 ## The one idea to hold onto
 

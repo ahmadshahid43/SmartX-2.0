@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using OmniBusiness.Application.Abstractions.Persistence;
+using OmniBusiness.Application.Abstractions.Security;
 using OmniBusiness.Domain.Foundation;
 
 namespace OmniBusiness.Infrastructure.Persistence;
@@ -35,6 +36,7 @@ public sealed class PostgresWorkspaceRepository : IWorkspaceRepository
 
     private readonly IHostEnvironment _environment;
     private readonly PersistenceOptions _options;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly SemaphoreSlim _syncLock = new(1, 1);
 
     private readonly JsonSerializerOptions _seedJsonOptions = new()
@@ -45,10 +47,14 @@ public sealed class PostgresWorkspaceRepository : IWorkspaceRepository
 
     private WorkspaceSnapshot? _cachedSnapshot;
 
-    public PostgresWorkspaceRepository(IHostEnvironment environment, IOptions<PersistenceOptions> options)
+    public PostgresWorkspaceRepository(
+        IHostEnvironment environment,
+        IOptions<PersistenceOptions> options,
+        IPasswordHasher passwordHasher)
     {
         _environment = environment;
         _options = options.Value;
+        _passwordHasher = passwordHasher;
 
         if (string.IsNullOrWhiteSpace(_options.ConnectionString))
         {
@@ -137,7 +143,10 @@ public sealed class PostgresWorkspaceRepository : IWorkspaceRepository
                 "(Persistence:InitializeFromSeedOnFirstRun = false).");
         }
 
-        var seeded = WorkspaceSnapshotNormalization.Normalize(await ReadSeedSnapshotAsync(cancellationToken));
+        var seeded = SeedBootstrapper.Apply(
+            await ReadSeedSnapshotAsync(cancellationToken),
+            _options,
+            _passwordHasher);
 
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
         await PersistAsync(connection, transaction, previous: null, current: seeded, cancellationToken);

@@ -3,13 +3,15 @@ using System.Text.Json.Serialization;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using OmniBusiness.Application.Abstractions.Persistence;
+using OmniBusiness.Application.Abstractions.Security;
 using OmniBusiness.Domain.Foundation;
 
 namespace OmniBusiness.Infrastructure.Persistence;
 
 public sealed class LocalJsonWorkspaceRepository(
     IHostEnvironment environment,
-    IOptions<PersistenceOptions> options) : IWorkspaceRepository
+    IOptions<PersistenceOptions> options,
+    IPasswordHasher passwordHasher) : IWorkspaceRepository
 {
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -133,8 +135,11 @@ public sealed class LocalJsonWorkspaceRepository(
         }
 
         await using var source = new FileStream(seedPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        await using var destination = new FileStream(localPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-        await source.CopyToAsync(destination, cancellationToken);
+        var seedSnapshot = await JsonSerializer.DeserializeAsync<WorkspaceSnapshot>(source, _jsonOptions, cancellationToken)
+            ?? throw new InvalidOperationException($"Unable to load workspace data from '{seedPath}'.");
+        var bootstrappedSnapshot = SeedBootstrapper.Apply(seedSnapshot, _options, passwordHasher);
+
+        await WriteSnapshotCoreAsync(localPath, bootstrappedSnapshot, cancellationToken);
 
         return localPath;
     }

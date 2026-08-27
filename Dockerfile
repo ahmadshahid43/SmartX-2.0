@@ -24,14 +24,14 @@ RUN dotnet publish src/OmniBusiness.Api/OmniBusiness.Api.csproj -c Release -o /a
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-ENV ASPNETCORE_URLS=http://+:8080 \
-    ASPNETCORE_ENVIRONMENT=Production \
-    LOCALAPPDATA=/data
+ENV ASPNETCORE_ENVIRONMENT=Production \
+    LOCALAPPDATA=/data \
+    PORT=10000
 
 COPY --from=dotnet-build /app/publish ./
 COPY --from=web-build /src/.artifacts/web-dist/omnibusiness-web/browser/ ./wwwroot/
 
 VOLUME ["/data"]
-EXPOSE 8080
+EXPOSE 10000
 
-ENTRYPOINT ["dotnet", "OmniBusiness.Api.dll"]
+ENTRYPOINT ["sh", "-c", "exec dotnet OmniBusiness.Api.dll --urls http://0.0.0.0:${PORT:-10000}"]

@@ -12,10 +12,13 @@ Swagger UI:
 
 The API uses a protected bearer token generated through ASP.NET Core Data Protection. It is not using JWT in the current starter.
 
-Default credentials:
+Local development seed credentials:
 
 - Email: `admin@omnibusiness.local`
 - Password: `Admin@123`
+
+For public/live deployments, the seed owner password should be overridden via
+`Persistence__BootstrapOwnerPassword`. Production seeding now rejects the old demo password path.
 
 ## Endpoints
 

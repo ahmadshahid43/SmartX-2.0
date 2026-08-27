@@ -86,7 +86,12 @@ From the repository root, you can also use the included batch files:
 
 For the recommended live setup, the built Angular app is served by the ASP.NET Core API from the
 same origin. That keeps the browser talking only to `/api/v1/...` and avoids putting any Supabase
-key in frontend code.
+key in frontend code. The safest first public deploy is now `Render + LocalJson + persistent disk`;
+you can cut over to `Supabase/Postgres` later without changing the app surface.
+
+One-click starting point:
+
+- [Deploy SmartX to Render](https://render.com/deploy?repo=https://github.com/ahmadshahid43/SmartX-2.0)
 
 Build the container image:
 
@@ -97,15 +102,20 @@ docker build -t smartx:latest .
 Run it locally in production mode with the offline provider:
 
 ```powershell
-docker run --rm -p 8080:8080 -v smartx-data:/data -e Persistence__Provider=LocalJson smartx:latest
+docker run --rm -p 8080:10000 `
+  -v smartx-data:/data `
+  -e Persistence__Provider=LocalJson `
+  -e Persistence__BootstrapOwnerPassword="ChangeMeNow!2026" `
+  smartx:latest
 ```
 
 Run it for cloud mode with Supabase/Postgres:
 
 ```powershell
-docker run --rm -p 8080:8080 `
+docker run --rm -p 8080:10000 `
   -v smartx-data:/data `
   -e Persistence__Provider=Supabase `
+  -e Persistence__BootstrapOwnerPassword="ChangeMeNow!2026" `
   -e Persistence__ConnectionString="Host=<region>.pooler.supabase.com;Port=5432;Database=postgres;Username=smartx_app;Password=<secret>;SSL Mode=Require;Pooling=true;Maximum Pool Size=10" `
   smartx:latest
 ```
@@ -116,13 +126,22 @@ After startup:
 - `/swagger` opens the API explorer
 - `/health` and `/ready` expose health checks
 
+For any brand-new production workspace seed, set `Persistence__BootstrapOwnerPassword`. In
+production mode the app now refuses to seed with the old demo password, and it auto-locks non-owner
+demo users like `Ahmad` on first boot.
+
 For the full go-live checklist, environment variables, rollback plan, and Supabase migration notes,
 see `docs/go-live/`.
 
-## Default login
+## Default local development login
+
+For local development only:
 
 - Email: `admin@omnibusiness.local`
 - Password: `Admin@123`
+
+Public/live deploys should use the owner password you provide through
+`Persistence__BootstrapOwnerPassword`.
 
 ## Key folders
 
