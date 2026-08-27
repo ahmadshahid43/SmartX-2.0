@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>No-Code Form Builder - OmniBusiness</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed": "#d3e4fe",
+                      "tertiary": "#000000",
+                      "on-error-container": "#93000a",
+                      "on-error": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-surface": "#303032",
+                      "outline-variant": "#c6c6cd",
+                      "surface-container-highest": "#e4e2e4",
+                      "primary": "#000000",
+                      "surface-container-low": "#f6f3f5",
+                      "on-secondary-fixed-variant": "#38485d",
+                      "tertiary-container": "#271901",
+                      "on-primary-fixed-variant": "#3f465c",
+                      "surface-variant": "#e4e2e4",
+                      "secondary": "#505f76",
+                      "on-primary-container": "#7c839b",
+                      "on-primary-fixed": "#131b2e",
+                      "error": "#ba1a1a",
+                      "on-secondary-container": "#54647a",
+                      "secondary-fixed-dim": "#b7c8e1",
+                      "on-tertiary": "#ffffff",
+                      "surface-dim": "#dcd9db",
+                      "secondary-container": "#d0e1fb",
+                      "on-secondary-fixed": "#0b1c30",
+                      "primary-container": "#131b2e",
+                      "surface-container-high": "#eae7e9",
+                      "on-background": "#1b1b1d",
+                      "outline": "#76777d",
+                      "surface-bright": "#fcf8fa",
+                      "on-tertiary-fixed": "#271901",
+                      "on-tertiary-container": "#98805d",
+                      "error-container": "#ffdad6",
+                      "on-surface": "#1b1b1d",
+                      "surface-tint": "#565e74",
+                      "background": "#fcf8fa",
+                      "surface": "#fcf8fa",
+                      "tertiary-fixed-dim": "#dec29a",
+                      "inverse-primary": "#bec6e0",
+                      "on-primary": "#ffffff",
+                      "inverse-on-surface": "#f3f0f2",
+                      "on-tertiary-fixed-variant": "#574425",
+                      "primary-fixed": "#dae2fd",
+                      "on-secondary": "#ffffff",
+                      "primary-fixed-dim": "#bec6e0",
+                      "surface-container": "#f0edef",
+                      "on-surface-variant": "#45464d",
+                      "tertiary-fixed": "#fcdeb5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "xl": "32px",
+                      "margin-desktop": "32px",
+                      "base": "8px",
+                      "sm": "8px",
+                      "xs": "4px",
+                      "margin-mobile": "16px",
+                      "md": "16px",
+                      "lg": "24px",
+                      "gutter": "16px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "data-tabular": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "data-tabular-sm": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "30px",
+                              {
+                                      "lineHeight": "38px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-tabular": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "data-tabular-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .grid-bg {
+            background-size: 20px 20px;
+            background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface font-body-md min-h-screen flex flex-col md:flex-row overflow-hidden">
+<!-- SideNavBar (Hidden on Mobile) -->
+<nav class="hidden md:flex flex-col h-screen w-[280px] bg-surface dark:bg-surface-container-low border-r border-outline-variant dark:border-outline py-lg gap-base flex-shrink-0 z-40">
+<div class="px-margin-desktop mb-4">
+<h1 class="text-headline-sm font-headline-sm font-bold text-primary dark:text-on-surface">OmniBusiness</h1>
+</div>
+<div class="px-4 mb-6">
+<div class="flex items-center gap-3 p-3 bg-surface-container rounded-lg border border-outline-variant">
+<img alt="Warehouse Selector" class="w-10 h-10 rounded bg-white object-cover" data-alt="A small, professional warehouse icon or abstract geometric shape representing a warehouse branch. Crisp lines, minimalist corporate aesthetic, monochromatic with subtle gradients." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZQgeeHtnfsZg9Um-XZG7UOEESSVHbd1UDxgyvVdfvn0PN4awsjwxhIXTuc9Wtq_hY_hyji2e3HmuCQ0bAyIHNfqEaEr-2qNqqhRlw_vMH_fZm0QdTODawqRepzJoBSOPkq5krstCBMz_5MfFZWuWjpB8Ot_bdW5B9J_CpmfKb2vhQJ1j75dqoGlDtDdf2DOqPyrWnbK6hDYquYeoaP27FHk7cmhLvNz4x_33xNWE3Hw6ciONpPW2Nxw"/>
+<div>
+<div class="text-label-md font-label-md text-on-surface">Main Branch</div>
+<div class="text-body-sm font-body-sm text-on-surface-variant">Warehouse A1</div>
+</div>
+<span class="material-symbols-outlined ml-auto text-on-surface-variant">expand_more</span>
+</div>
+</div>
+<div class="px-4 mb-4">
+<button class="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-2 px-4 rounded-lg font-label-md text-label-md hover:bg-opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm">add</span>
+                New Transaction
+            </button>
+</div>
+<div class="flex-1 overflow-y-auto">
+<ul class="flex flex-col gap-1">
+<li>
+<a class="flex items-center gap-3 text-on-surface-variant dark:text-surface-variant px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 text-on-surface-variant dark:text-surface-variant px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined">point_of_sale</span>
+<span class="text-label-md font-label-md">Sales</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 text-on-surface-variant dark:text-surface-variant px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="text-label-md font-label-md">POS</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 text-on-surface-variant dark:text-surface-variant px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-label-md font-label-md">Inventory</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 text-on-surface-variant dark:text-surface-variant px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="text-label-md font-label-md">Accounting</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 bg-secondary-fixed dark:bg-primary-container text-on-secondary-fixed dark:text-on-primary-fixed border-l-4 border-primary dark:border-primary-fixed-dim px-4 py-3 scale-[0.99] duration-150" href="#">
+<span class="material-symbols-outlined">extension</span>
+<span class="text-label-md font-label-md">No-Code Builder</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 text-on-surface-variant dark:text-surface-variant px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+</li>
+</ul>
+</div>
+<div class="mt-auto pt-4 border-t border-outline-variant px-4">
+<ul class="flex flex-col gap-1">
+<li>
+<a class="flex items-center gap-3 text-on-surface-variant dark:text-surface-variant px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+<span class="text-label-md font-label-md">Support</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 text-on-surface-variant dark:text-surface-variant px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-label-md font-label-md">Sign Out</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col h-screen overflow-hidden bg-surface-container-lowest">
+<!-- TopNavBar (Visible on Mobile, but tailored for builder context here) -->
+<header class="flex justify-between items-center w-full px-margin-desktop h-16 z-50 bg-surface dark:bg-surface-container-low border-b border-outline-variant dark:border-outline flex-shrink-0">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-on-surface"><span class="material-symbols-outlined">menu</span></button>
+<h2 class="text-headline-sm font-headline-sm text-on-surface font-semibold">Form Builder: Product Custom Fields</h2>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-4 py-2 border border-outline-variant rounded text-label-md font-label-md text-on-surface hover:bg-surface-container-high transition-colors">Preview</button>
+<button class="px-4 py-2 bg-primary text-on-primary rounded text-label-md font-label-md hover:bg-opacity-90 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">save</span>
+                     Save Form
+                 </button>
+</div>
+</header>
+<!-- Builder Workspace -->
+<main class="flex-1 flex overflow-hidden">
+<!-- Left Sidebar: Field Library -->
+<aside class="w-64 border-r border-outline-variant bg-surface flex flex-col h-full flex-shrink-0 overflow-y-auto">
+<div class="p-4 border-b border-outline-variant sticky top-0 bg-surface z-10">
+<h3 class="text-label-md font-label-md text-on-surface font-semibold uppercase tracking-wider">Field Library</h3>
+<div class="mt-3 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="w-full pl-9 pr-3 py-1.5 bg-surface-container rounded border border-outline-variant text-body-sm font-body-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="Search fields..." type="text"/>
+</div>
+</div>
+<div class="p-4 flex flex-col gap-2">
+<div class="text-xs font-semibold text-on-surface-variant mb-1 mt-2">BASIC</div>
+<div class="flex items-center gap-3 p-2.5 border border-outline-variant rounded bg-surface-container-lowest cursor-move hover:border-primary hover:shadow-sm transition-all group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">short_text</span>
+<span class="text-body-sm font-body-sm text-on-surface">Short Text</span>
+<span class="material-symbols-outlined ml-auto text-outline opacity-0 group-hover:opacity-100 text-[16px]">drag_indicator</span>
+</div>
+<div class="flex items-center gap-3 p-2.5 border border-outline-variant rounded bg-surface-container-lowest cursor-move hover:border-primary hover:shadow-sm transition-all group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">notes</span>
+<span class="text-body-sm font-body-sm text-on-surface">Long Text</span>
+<span class="material-symbols-outlined ml-auto text-outline opacity-0 group-hover:opacity-100 text-[16px]">drag_indicator</span>
+</div>
+<div class="flex items-center gap-3 p-2.5 border border-outline-variant rounded bg-surface-container-lowest cursor-move hover:border-primary hover:shadow-sm transition-all group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">tag</span>
+<span class="text-body-sm font-body-sm text-on-surface">Number</span>
+<span class="material-symbols-outlined ml-auto text-outline opacity-0 group-hover:opacity-100 text-[16px]">drag_indicator</span>
+</div>
+<div class="flex items-center gap-3 p-2.5 border border-outline-variant rounded bg-surface-container-lowest cursor-move hover:border-primary hover:shadow-sm transition-all group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">calendar_today</span>
+<span class="text-body-sm font-body-sm text-on-surface">Date</span>
+<span class="material-symbols-outlined ml-auto text-outline opacity-0 group-hover:opacity-100 text-[16px]">drag_indicator</span>
+</div>
+<div class="flex items-center gap-3 p-2.5 border border-outline-variant rounded bg-surface-container-lowest cursor-move hover:border-primary hover:shadow-sm transition-all group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">arrow_drop_down_circle</span>
+<span class="text-body-sm font-body-sm text-on-surface">Dropdown</span>
+<span class="material-symbols-outlined ml-auto text-outline opacity-0 group-hover:opacity-100 text-[16px]">drag_indicator</span>
+</div>
+<div class="text-xs font-semibold text-on-surface-variant mb-1 mt-4">ADVANCED</div>
+<div class="flex items-center gap-3 p-2.5 border border-outline-variant rounded bg-surface-container-lowest cursor-move hover:border-primary hover:shadow-sm transition-all group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">functions</span>
+<span class="text-body-sm font-body-sm text-on-surface">Formula</span>
+<span class="material-symbols-outlined ml-auto text-outline opacity-0 group-hover:opacity-100 text-[16px]">drag_indicator</span>
+</div>
+<div class="flex items-center gap-3 p-2.5 border border-outline-variant rounded bg-surface-container-lowest cursor-move hover:border-primary hover:shadow-sm transition-all group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">search</span>
+<span class="text-body-sm font-body-sm text-on-surface">Lookup</span>
+<span class="material-symbols-outlined ml-auto text-outline opacity-0 group-hover:opacity-100 text-[16px]">drag_indicator</span>
+</div>
+</div>
+</aside>
+<!-- Center Canvas -->
+<div class="flex-1 bg-surface-container-lowest grid-bg overflow-y-auto p-8 relative">
+<div class="max-w-3xl mx-auto bg-surface border border-outline-variant rounded-lg shadow-sm min-h-[600px] flex flex-col">
+<div class="p-6 border-b border-outline-variant bg-surface-bright rounded-t-lg">
+<h2 class="text-headline-sm font-headline-sm text-on-surface mb-2">Product Custom Fields</h2>
+<p class="text-body-md font-body-md text-on-surface-variant">Configure additional data points collected for all inventory items.</p>
+</div>
+<div class="p-6 flex-1 flex flex-col gap-4">
+<!-- Row 1 -->
+<div class="grid grid-cols-2 gap-4">
+<!-- Field: Manufacturer Code -->
+<div class="border border-outline-variant rounded bg-surface-container-lowest p-4 relative group hover:border-primary transition-colors cursor-pointer">
+<div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+<button class="p-1 rounded hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[16px]">edit</span></button>
+<button class="p-1 rounded hover:bg-error-container text-error"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+<button class="p-1 rounded hover:bg-surface-container-high text-on-surface-variant cursor-move"><span class="material-symbols-outlined text-[16px]">drag_indicator</span></button>
+</div>
+<label class="block text-label-md font-label-md text-on-surface mb-1 flex items-center gap-1">
+                                    Manufacturer Code <span class="text-error">*</span>
+</label>
+<div class="w-full h-10 border border-outline-variant rounded bg-surface-container-low flex items-center px-3 text-on-surface-variant text-body-sm font-body-sm">
+                                    Text Input
+                                </div>
+</div>
+<!-- Field: Internal Rating -->
+<div class="border border-outline-variant rounded bg-surface-container-lowest p-4 relative group hover:border-primary transition-colors cursor-pointer">
+<div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+<button class="p-1 rounded hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[16px]">edit</span></button>
+<button class="p-1 rounded hover:bg-error-container text-error"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+<button class="p-1 rounded hover:bg-surface-container-high text-on-surface-variant cursor-move"><span class="material-symbols-outlined text-[16px]">drag_indicator</span></button>
+</div>
+<label class="block text-label-md font-label-md text-on-surface mb-1">
+                                    Internal Rating
+                                </label>
+<div class="w-full h-10 border border-outline-variant rounded bg-surface-container-low flex items-center px-3 text-on-surface-variant text-body-sm font-body-sm justify-between">
+<span>Select rating...</span>
+<span class="material-symbols-outlined text-[18px]">arrow_drop_down</span>
+</div>
+</div>
+</div>
+<!-- Row 2 (Selected Field) -->
+<div class="grid grid-cols-1 gap-4">
+<!-- Field: Warranty Period (Selected) -->
+<div class="border-2 border-primary rounded bg-secondary-fixed bg-opacity-10 p-4 relative group shadow-sm cursor-pointer">
+<div class="absolute -top-3 left-4 bg-primary text-on-primary px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Selected</div>
+<div class="absolute top-2 right-2 flex gap-1">
+<button class="p-1 rounded hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[16px]">edit</span></button>
+<button class="p-1 rounded hover:bg-error-container text-error"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+<button class="p-1 rounded hover:bg-surface-container-high text-on-surface-variant cursor-move"><span class="material-symbols-outlined text-[16px]">drag_indicator</span></button>
+</div>
+<label class="block text-label-md font-label-md text-on-surface mb-1 mt-1">
+                                    Warranty Period (Months)
+                                </label>
+<div class="w-full h-10 border border-outline-variant rounded bg-surface-container-lowest flex items-center px-3 text-on-surface-variant text-body-sm font-body-sm">
+                                    Number Input
+                                </div>
+</div>
+</div>
+<!-- Drop Zone Indicator -->
+<div class="border-2 border-dashed border-primary border-opacity-50 rounded-lg h-16 flex items-center justify-center bg-secondary-fixed bg-opacity-20 text-primary font-label-md text-label-md mt-2">
+                             Drop field here
+                         </div>
+</div>
+</div>
+</div>
+<!-- Right Sidebar: Field Properties -->
+<aside class="w-80 border-l border-outline-variant bg-surface flex flex-col h-full flex-shrink-0 overflow-y-auto">
+<div class="p-4 border-b border-outline-variant sticky top-0 bg-surface z-10 flex justify-between items-center">
+<h3 class="text-label-md font-label-md text-on-surface font-semibold uppercase tracking-wider">Field Properties</h3>
+<span class="bg-surface-container px-2 py-1 rounded text-[10px] font-mono text-on-surface-variant border border-outline-variant">ID: fld_wrrnty</span>
+</div>
+<div class="p-5 flex flex-col gap-6">
+<!-- Basic Settings -->
+<div>
+<h4 class="text-body-sm font-label-md text-on-surface mb-3 flex items-center gap-2 border-b border-outline-variant pb-1">
+<span class="material-symbols-outlined text-[18px]">settings</span> Basic
+                        </h4>
+<div class="space-y-4">
+<div>
+<label class="block text-label-md font-label-md text-on-surface mb-1">Field Label</label>
+<input class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md font-body-md" type="text" value="Warranty Period (Months)"/>
+</div>
+<div>
+<label class="block text-label-md font-label-md text-on-surface mb-1">Help Text / Description</label>
+<textarea class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-sm font-body-sm text-on-surface-variant resize-none" rows="2">Duration of standard warranty coverage.</textarea>
+</div>
+</div>
+</div>
+<!-- Validation Rules -->
+<div>
+<h4 class="text-body-sm font-label-md text-on-surface mb-3 flex items-center gap-2 border-b border-outline-variant pb-1">
+<span class="material-symbols-outlined text-[18px]">rule</span> Validation
+                        </h4>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<label class="text-body-sm font-body-sm text-on-surface">Required Field</label>
+<!-- Toggle Switch -->
+<button class="w-10 h-6 rounded-full bg-surface-container-high border border-outline-variant relative transition-colors focus:outline-none">
+<div class="w-4 h-4 rounded-full bg-outline absolute left-1 top-1 transition-transform"></div>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div>
+<label class="block text-label-md font-label-md text-on-surface mb-1">Min Value</label>
+<input class="w-full px-3 py-1.5 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-sm font-body-sm font-data-tabular" type="number" value="0"/>
+</div>
+<div>
+<label class="block text-label-md font-label-md text-on-surface mb-1">Max Value</label>
+<input class="w-full px-3 py-1.5 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-sm font-body-sm font-data-tabular" placeholder="None" type="number"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Advanced -->
+<div>
+<h4 class="text-body-sm font-label-md text-on-surface mb-3 flex items-center gap-2 border-b border-outline-variant pb-1">
+<span class="material-symbols-outlined text-[18px]">tune</span> Advanced
+                        </h4>
+<div class="space-y-4">
+<div>
+<label class="block text-label-md font-label-md text-on-surface mb-1">Default Value</label>
+<input class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md font-body-md font-data-tabular" type="number" value="12"/>
+</div>
+<div class="flex items-center justify-between">
+<label class="text-body-sm font-body-sm text-on-surface">Read-Only</label>
+<button class="w-10 h-6 rounded-full bg-surface-container-high border border-outline-variant relative transition-colors focus:outline-none">
+<div class="w-4 h-4 rounded-full bg-outline absolute left-1 top-1 transition-transform"></div>
+</button>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,236 @@
+<section class="page-stack">
+  <div class="page-header with-actions">
+    <div>
+      <h1>Inventory Control</h1>
+      <p>Create products, import Excel stock sheets, and maintain item master data without touching code.</p>
+    </div>
+
+    <div class="page-actions">
+      <button class="secondary-button compact-button" type="button" (click)="reload()">
+        <span class="material-symbols-outlined">refresh</span>
+        Refresh
+      </button>
+      <button class="secondary-button compact-button" type="button" (click)="downloadTemplate()">
+        <span class="material-symbols-outlined">download</span>
+        Template
+      </button>
+      <button class="primary-button compact-button" type="button" (click)="startNewProduct()">
+        <span class="material-symbols-outlined">add_circle</span>
+        New Product
+      </button>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="feedback-card error">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div class="feedback-card success">{{ successMessage() }}</div>
+  }
+
+  @if (importWarnings().length > 0) {
+    <div class="feedback-card warning">
+      <strong>Import warnings:</strong>
+      <div class="warning-list">
+        @for (warning of importWarnings(); track warning) {
+          <span>{{ warning }}</span>
+        }
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="feedback-card">Saving inventory changes...</div>
+  }
+
+  @if (inventory(); as data) {
+    <article class="surface-card import-card">
+      <div class="section-header">
+        <div>
+          <h2>Inventory Import</h2>
+          <p>Excel `.xlsx` ya CSV file se naya stock bulk me add karein. Existing SKU mile to row update ho jayegi.</p>
+        </div>
+      </div>
+
+      <div class="import-grid">
+        <div class="import-copy">
+          <strong>Supported columns</strong>
+          <span>`SKU`, `Name` required hain. Baqi columns optional: `Category`, `Unit Price`, `Warehouse`, `In Hand`, `Reserved`, `Reorder Level`, `Is Favorite`, `Is Quick Sale`, `Visual Code`.</span>
+        </div>
+
+        <div class="import-actions">
+          <input #inventoryImportInput accept=".xlsx,.csv" class="file-input" type="file" (change)="handleInventoryImport($event)" />
+          <button class="primary-button compact-button" type="button" [disabled]="loading()" (click)="inventoryImportInput.click()">
+            <span class="material-symbols-outlined">upload_file</span>
+            Import Excel / CSV
+          </button>
+        </div>
+      </div>
+    </article>
+
+    <div class="inventory-layout">
+      <article class="surface-card table-card">
+        <div class="table-toolbar">
+          <div class="table-meta">Showing {{ data.items.length }} product(s)</div>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Product</th>
+                <th>Category</th>
+                <th>In Hand</th>
+                <th>Available</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Quick</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of data.items; track item.productId) {
+                <tr
+                  class="inventory-row"
+                  [class.is-selected]="selectedProductId() === item.productId"
+                  (click)="selectProduct(item)"
+                >
+                  <td class="mono">{{ item.sku }}</td>
+                  <td>{{ item.productName }}</td>
+                  <td>{{ item.category }}</td>
+                  <td class="mono">{{ item.inHand }}</td>
+                  <td class="mono" [class.text-danger]="item.available <= item.reorderLevel">{{ item.available }}</td>
+                  <td class="mono">{{ item.unitPrice | currency:'PKR':'symbol-narrow':'1.0-0' }}</td>
+                  <td><span [class]="statusClass(item)">{{ item.status }}</span></td>
+                  <td>
+                    <div class="quick-actions">
+                      <button class="mini-button" type="button" (click)="$event.stopPropagation(); quickAdjust(item, 5)">+5</button>
+                      <button class="mini-button" type="button" (click)="$event.stopPropagation(); quickAdjust(item, -1)">-1</button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8">No inventory items yet. Create a product manually ya Excel sheet import karein.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <aside class="inventory-sidebar">
+        <article class="surface-card admin-card">
+          <div class="section-header">
+            <div>
+              <h2>{{ selectedProductId() ? 'Edit Product' : 'Create Product' }}</h2>
+              <p>Maintain the retail catalog from the admin side.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <label class="field">
+              <span>SKU</span>
+              <input [(ngModel)]="productForm.sku" type="text" />
+            </label>
+
+            <label class="field">
+              <span>Name</span>
+              <input [(ngModel)]="productForm.name" type="text" />
+            </label>
+
+            <label class="field">
+              <span>Category</span>
+              <input [(ngModel)]="productForm.category" type="text" />
+            </label>
+
+            <label class="field">
+              <span>Warehouse</span>
+              <input [(ngModel)]="productForm.warehouse" type="text" />
+            </label>
+
+            <label class="field">
+              <span>Unit Price</span>
+              <input [(ngModel)]="productForm.unitPrice" type="number" min="0" />
+            </label>
+
+            <label class="field">
+              <span>Visual Code</span>
+              <input [(ngModel)]="productForm.visualCode" type="text" />
+            </label>
+
+            <label class="field">
+              <span>In Hand</span>
+              <input [(ngModel)]="productForm.inHand" type="number" min="0" />
+            </label>
+
+            <label class="field">
+              <span>Reserved</span>
+              <input [(ngModel)]="productForm.reserved" type="number" min="0" />
+            </label>
+
+            <label class="field">
+              <span>Reorder Level</span>
+              <input [(ngModel)]="productForm.reorderLevel" type="number" min="0" />
+            </label>
+
+            <label class="checkbox-inline">
+              <input [(ngModel)]="productForm.isQuickSale" type="checkbox" />
+              <span>Quick sale enabled</span>
+            </label>
+
+            <label class="checkbox-inline">
+              <input [(ngModel)]="productForm.isFavorite" type="checkbox" />
+              <span>Mark as favorite in POS</span>
+            </label>
+          </div>
+
+          <button class="primary-button wide" type="button" [disabled]="loading()" (click)="saveProduct()">
+            <span class="material-symbols-outlined">save</span>
+            {{ selectedProductId() ? 'Update Product' : 'Create Product' }}
+          </button>
+        </article>
+
+        <article class="surface-card admin-card">
+          <div class="section-header">
+            <div>
+              <h2>Stock Adjustment</h2>
+              <p>Use this for shrinkage, receiving, and manual count corrections.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <label class="field">
+              <span>Product</span>
+              <select [(ngModel)]="adjustmentProductId" [disabled]="data.items.length === 0">
+                @for (item of data.items; track item.productId) {
+                  <option [value]="item.productId">{{ item.productName }} ({{ item.sku }})</option>
+                }
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Quantity Delta</span>
+              <input [(ngModel)]="adjustmentDelta" type="number" />
+            </label>
+
+            <label class="field">
+              <span>Reason</span>
+              <input [(ngModel)]="adjustmentReason" type="text" />
+            </label>
+          </div>
+
+          @if (data.items.length === 0) {
+            <div class="empty-note">Pehle inventory add karein, phir stock adjustment available hoga.</div>
+          }
+
+          <button class="secondary-button wide" type="button" [disabled]="loading() || data.items.length === 0" (click)="applyAdjustment()">
+            <span class="material-symbols-outlined">inventory</span>
+            Save Adjustment
+          </button>
+        </article>
+      </aside>
+    </div>
+  }
+</section>

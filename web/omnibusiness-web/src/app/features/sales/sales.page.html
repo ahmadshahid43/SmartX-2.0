@@ -1,0 +1,182 @@
+<section class="page-stack">
+  <div class="page-header with-actions">
+    <div>
+      <h1>Sales History</h1>
+      <p>Completed POS checkouts, receipt detail, and daily cashier visibility.</p>
+    </div>
+
+    <div class="page-actions">
+      <button class="secondary-button compact-button" type="button" (click)="reload()">
+        <span class="material-symbols-outlined">refresh</span>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="feedback-card error">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div class="feedback-card success">{{ successMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="feedback-card">Loading sales history...</div>
+  }
+
+  @if (sales(); as salesData) {
+    <div class="metric-grid">
+      <article class="surface-card metric-card">
+        <div class="metric-label">Transactions</div>
+        <div class="metric-value">{{ summary().transactionCount }}</div>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">Revenue</div>
+        <div class="metric-value">{{ summary().revenue | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">Gross Profit</div>
+        <div class="metric-value">{{ summary().grossProfit | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">Average Ticket</div>
+        <div class="metric-value">{{ summary().averageTicket | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+      </article>
+    </div>
+
+    <div class="sales-layout">
+      <article class="surface-card table-card">
+        <div class="table-toolbar">
+          <div class="table-meta">Showing {{ salesData.items.length }} completed receipts</div>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Customer</th>
+                <th>Paid</th>
+                <th>Items</th>
+                <th>Method</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (sale of salesData.items; track sale.saleId) {
+                <tr
+                  class="sale-row"
+                  [class.is-selected]="selectedSale()?.saleId === sale.saleId"
+                  (click)="selectSale(sale.saleId)"
+                >
+                  <td class="mono">{{ sale.referenceNo }}</td>
+                  <td>{{ sale.customerName }}</td>
+                  <td class="mono">{{ sale.amount | currency:'PKR':'symbol-narrow':'1.0-0' }}</td>
+                  <td>{{ sale.itemCount }}</td>
+                  <td>{{ sale.paymentMethod }}</td>
+                  <td>{{ sale.occurredAt | date:'dd MMM, h:mm a' }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6">No completed sales yet. Complete a POS payment to see receipts here.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      @if (selectedSale(); as sale) {
+        <aside class="surface-card receipt-card">
+          <div class="section-header">
+            <div>
+              <h2>{{ sale.referenceNo }}</h2>
+              <p>{{ sale.customerName }} | {{ sale.occurredAt | date:'dd MMM yyyy, h:mm a' }}</p>
+            </div>
+            <div class="receipt-status-stack">
+              <span class="status-chip success">{{ sale.status }}</span>
+              <span class="status-chip neutral">{{ sale.fbrStatus }}</span>
+            </div>
+          </div>
+
+          <div class="receipt-meta">
+            <div>
+              <span class="eyebrow">Cashier</span>
+              <strong>{{ sale.cashierName }}</strong>
+            </div>
+            <div>
+              <span class="eyebrow">Payment</span>
+              <strong>{{ sale.paymentMethod }}</strong>
+            </div>
+            <div>
+              <span class="eyebrow">Received</span>
+              <strong>{{ sale.receivedAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+            <div>
+              <span class="eyebrow">FBR Invoice</span>
+              <strong>{{ sale.fbrInvoiceNumber || 'Not issued yet' }}</strong>
+            </div>
+          </div>
+
+          <div class="receipt-actions">
+            <div class="receipt-action-buttons">
+              <button class="secondary-button" type="button" [disabled]="loading()" (click)="submitToFbr(sale)">
+                <span class="material-symbols-outlined">cloud_upload</span>
+                Submit / Refresh FBR Status
+              </button>
+              <button class="secondary-button" type="button" (click)="printInvoice(sale)">
+                <span class="material-symbols-outlined">print</span>
+                Print Invoice
+              </button>
+              <button class="secondary-button" type="button" (click)="printSlip(sale)">
+                <span class="material-symbols-outlined">receipt</span>
+                Print Slip
+              </button>
+            </div>
+            @if (sale.fbrErrorMessage) {
+              <span class="inline-error">{{ sale.fbrErrorMessage }}</span>
+            }
+          </div>
+
+          <div class="receipt-lines">
+            @for (line of sale.lines; track line.productId + line.sku) {
+              <div class="receipt-line">
+                <div>
+                  <strong>{{ line.name }}</strong>
+                  <div class="mono">{{ line.sku }}</div>
+                </div>
+                <div class="receipt-line-right">
+                  <span>{{ line.quantity }} x {{ line.unitPrice | currency:'PKR':'symbol-narrow':'1.0-0' }}</span>
+                  <strong>{{ line.lineTotal | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="totals-panel">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <strong>{{ sale.amount - sale.tax + sale.discount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+            <div class="summary-row text-success">
+              <span>Discount</span>
+              <strong>- {{ sale.discount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+            <div class="summary-row">
+              <span>Tax</span>
+              <strong>{{ sale.tax | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+            <div class="summary-row total-row">
+              <span>Total</span>
+              <strong>{{ sale.amount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+          </div>
+        </aside>
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,59 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    env:
+      DOTNET_CLI_HOME: ${{ github.workspace }}\.dotnet
+      NUGET_PACKAGES: ${{ github.workspace }}\.nuget\packages
+      APPDATA: ${{ github.workspace }}\.appdata
+      LOCALAPPDATA: ${{ github.workspace }}\.localappdata
+      npm_config_cache: ${{ github.workspace }}\.npm-cache
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/omnibusiness-web/package-lock.json
+
+      - name: Prepare NuGet config
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "$env:APPDATA\NuGet" | Out-Null
+          Copy-Item -LiteralPath "$env:GITHUB_WORKSPACE\NuGet.Config" -Destination "$env:APPDATA\NuGet\NuGet.Config" -Force
+
+      - name: Restore .NET
+        shell: pwsh
+        run: dotnet restore OmniBusiness.slnx --configfile NuGet.Config --packages .nuget\packages
+
+      - name: Build .NET
+        shell: pwsh
+        run: dotnet build OmniBusiness.slnx --no-restore
+
+      - name: Test .NET
+        shell: pwsh
+        run: dotnet test OmniBusiness.slnx --no-build
+
+      - name: Install web dependencies
+        shell: pwsh
+        working-directory: web/omnibusiness-web
+        run: npm ci
+
+      - name: Build web
+        shell: pwsh
+        working-directory: web/omnibusiness-web
+        run: npm run build

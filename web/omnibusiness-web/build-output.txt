@@ -1,0 +1,16 @@
+
+> omnibusiness-web@0.0.0 build
+> node ./node_modules/@angular/cli/bin/ng.js build
+
+> Building...
+√ Building...
+Initial chunk files | Names         |  Raw size | Estimated transfer size
+main-RXRBXIFS.js    | main          | 465.13 kB |               118.78 kB
+styles-HXEVFLOB.css | styles        |  12.07 kB |                 2.83 kB
+
+                    | Initial total | 477.20 kB |               121.60 kB
+
+Application bundle generation complete. [7.311 seconds] - 2026-08-24T10:35:31.634Z
+
+Output location: D:\Personal Projects\stitch_omnistack_erp_pos\web\omnibusiness-web\dist\omnibusiness-web
+

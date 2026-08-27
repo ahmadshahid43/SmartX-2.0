@@ -1,0 +1,68 @@
+.vendor-card,
+.table-card {
+  padding: 1.5rem;
+}
+
+.vendor-grid,
+.vendor-head,
+.vendor-stats {
+  display: grid;
+}
+
+.vendor-grid {
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.vendor-tile {
+  background: var(--surface-card-flat);
+  border: 1px solid var(--outline);
+  border-radius: 20px;
+  padding: 1rem;
+}
+
+.vendor-head {
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-bottom: 1rem;
+}
+
+.vendor-head p {
+  color: var(--text-muted);
+  margin: 0.3rem 0 0;
+}
+
+.vendor-stats {
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.vendor-stats span {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
+}
+
+.procurement-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 1100px) {
+  .vendor-grid,
+  .procurement-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .vendor-head {
+    grid-template-columns: 1fr;
+  }
+
+  .vendor-stats {
+    grid-template-columns: 1fr;
+  }
+}

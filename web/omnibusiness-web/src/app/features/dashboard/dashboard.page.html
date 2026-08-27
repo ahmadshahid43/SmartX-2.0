@@ -1,0 +1,153 @@
+@if (dashboard(); as data) {
+  <section class="page-stack">
+    <div class="page-header with-actions">
+      <div>
+        <h1>Welcome back, {{ authService.currentUser()?.displayName ?? 'Team' }}</h1>
+        <p>Here is the overview of your business today.</p>
+      </div>
+
+      <button class="secondary-button compact-button">
+        <span class="material-symbols-outlined">calendar_month</span>
+        {{ currentDateLabel }}
+      </button>
+    </div>
+
+    <div class="metric-grid">
+      <article class="metric-card surface-card">
+        <div class="metric-label">{{ data.sales.label }}</div>
+        <div class="metric-value">{{ data.sales.value | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+        <div class="metric-delta" [class.positive]="data.sales.deltaDirection === 'up'" [class.negative]="data.sales.deltaDirection === 'down'">
+          {{ data.sales.deltaPercentage }}% vs yesterday
+        </div>
+      </article>
+
+      <article class="metric-card surface-card">
+        <div class="metric-label">{{ data.purchases.label }}</div>
+        <div class="metric-value">{{ data.purchases.value | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+        <div class="metric-delta" [class.positive]="data.purchases.deltaDirection === 'up'" [class.negative]="data.purchases.deltaDirection === 'down'">
+          {{ data.purchases.deltaPercentage }}% vs yesterday
+        </div>
+      </article>
+
+      <article class="metric-card surface-card">
+        <div class="metric-label">{{ data.grossProfit.label }}</div>
+        <div class="metric-value">{{ data.grossProfit.value | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+        <div class="metric-delta" [class.positive]="data.grossProfit.deltaDirection === 'up'" [class.negative]="data.grossProfit.deltaDirection === 'down'">
+          {{ data.grossProfit.deltaPercentage }}% vs yesterday
+        </div>
+      </article>
+
+      <article class="metric-card surface-card alert-card">
+        <div class="metric-label">{{ data.lowStock.label }}</div>
+        <div class="alert-row">
+          <div class="metric-value">{{ data.lowStock.count }}</div>
+          <button class="text-button">{{ data.lowStock.actionLabel }}</button>
+        </div>
+      </article>
+    </div>
+
+    <div class="dashboard-grid">
+      <article class="surface-card chart-card">
+        <div class="section-header">
+          <h2>Sales Trend</h2>
+          <button class="icon-button" type="button">
+            <span class="material-symbols-outlined">more_vert</span>
+          </button>
+        </div>
+
+        <svg class="trend-chart" viewBox="0 0 780 280" preserveAspectRatio="none">
+          <line x1="0" y1="72" x2="780" y2="72" class="grid-line" />
+          <line x1="0" y1="148" x2="780" y2="148" class="grid-line" />
+          <line x1="0" y1="224" x2="780" y2="224" class="grid-line" />
+          <polyline [attr.points]="trendPolyline()" class="trend-line"></polyline>
+        </svg>
+
+        <div class="trend-labels">
+          @for (point of data.trend; track point.label) {
+            <span>{{ point.label }}</span>
+          }
+        </div>
+      </article>
+
+      <article class="surface-card compact-list-card">
+        <div class="section-header">
+          <h2>Top Selling</h2>
+          <button class="icon-button" type="button">
+            <span class="material-symbols-outlined">filter_alt</span>
+          </button>
+        </div>
+
+        <div class="list-stack">
+          @for (item of data.topSelling; track item.name) {
+            <div class="list-item">
+              <div class="list-icon">
+                <span class="material-symbols-outlined">inventory</span>
+              </div>
+              <div class="list-copy">
+                <strong>{{ item.name }}</strong>
+                <span>{{ item.units }} Units</span>
+              </div>
+              <div class="mono">{{ item.revenue | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+            </div>
+          }
+        </div>
+      </article>
+
+      <article class="surface-card table-card">
+        <div class="section-header">
+          <h2>Recent Transactions</h2>
+          <button class="secondary-button">Export</button>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Date / Time</th>
+                <th>Ref #</th>
+                <th>Customer</th>
+                <th>Amount (PKR)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (transaction of data.recentTransactions; track transaction.referenceNo) {
+                <tr>
+                  <td>{{ transaction.occurredAt | date:'MMM d, h:mm a' }}</td>
+                  <td class="mono">{{ transaction.referenceNo }}</td>
+                  <td>{{ transaction.customerName }}</td>
+                  <td class="mono">{{ transaction.amount | currency:'PKR':'symbol-narrow':'1.0-0' }}</td>
+                  <td><span [class]="statusClass(transaction)">{{ transaction.status }}</span></td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5">No transactions yet. Start billing from POS to populate this view.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="surface-card branch-card-grid">
+        <div class="section-header">
+          <h2>Branch Performance</h2>
+        </div>
+
+        <div class="branch-stack">
+          @for (branch of data.branchPerformance; track branch.branchName) {
+            <div class="branch-progress-row">
+              <div class="branch-progress-head">
+                <span>{{ branch.branchName }}</span>
+                <strong>{{ branch.percentage }}%</strong>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-bar-fill" [style.width.%]="branch.percentage"></div>
+              </div>
+            </div>
+          }
+        </div>
+      </article>
+    </div>
+  </section>
+}

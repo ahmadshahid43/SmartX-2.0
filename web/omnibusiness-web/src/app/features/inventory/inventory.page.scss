@@ -1,0 +1,133 @@
+:host {
+  display: block;
+}
+
+.inventory-layout {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.95fr);
+}
+
+.import-card,
+.inventory-sidebar,
+.admin-card,
+.form-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.import-card {
+  padding: 1.35rem 1.5rem;
+}
+
+.import-grid,
+.import-copy,
+.import-actions,
+.warning-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.import-grid {
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.import-copy span,
+.empty-note {
+  color: var(--text-muted);
+}
+
+.import-actions {
+  justify-items: end;
+}
+
+.file-input {
+  display: none;
+}
+
+.inventory-row {
+  cursor: pointer;
+  transition: background 180ms ease;
+}
+
+.inventory-row:hover,
+.inventory-row.is-selected {
+  background: var(--primary-soft);
+}
+
+.feedback-card {
+  border: 1px solid var(--outline);
+  border-radius: 18px;
+  padding: 1rem 1.1rem;
+}
+
+.feedback-card.error {
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.feedback-card.success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.feedback-card.warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.form-grid input,
+.form-grid select {
+  background: transparent;
+  border: 1px solid var(--outline);
+  border-radius: 14px;
+  color: var(--text);
+  padding: 0.85rem 0.95rem;
+  width: 100%;
+}
+
+.checkbox-inline {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  gap: 0.65rem;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.mini-button {
+  background: var(--surface-soft);
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  color: var(--text);
+  padding: 0.35rem 0.75rem;
+}
+
+@media (max-width: 1280px) {
+  .inventory-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .import-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .import-actions {
+    justify-items: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .import-card,
+  .admin-card {
+    padding-inline: 1rem;
+  }
+
+  .quick-actions {
+    flex-wrap: wrap;
+  }
+}

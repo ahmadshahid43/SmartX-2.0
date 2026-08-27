@@ -1,0 +1,171 @@
+@if (hub(); as data) {
+  <section class="page-stack">
+    <div class="page-header with-actions">
+      <div>
+        <h1>Procurement & Transfers</h1>
+        <p>Supplier management, purchase orders aur branch transfers ka central control yahan available hai.</p>
+      </div>
+
+      <div class="page-actions">
+        <a class="secondary-button compact-button" routerLink="/inventory">
+          <span class="material-symbols-outlined">inventory_2</span>
+          Open Inventory
+        </a>
+        <button class="primary-button compact-button" type="button" (click)="reload()">
+          <span class="material-symbols-outlined">refresh</span>
+          Refresh Pipeline
+        </button>
+      </div>
+    </div>
+
+    <div class="metric-grid">
+      <article class="surface-card metric-card">
+        <div class="metric-label">Active Vendors</div>
+        <div class="metric-value">{{ data.metrics.activeVendors }}</div>
+        <div class="metric-delta">Approved supplier relationships</div>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">Open POs</div>
+        <div class="metric-value">{{ data.metrics.openPurchaseOrders }}</div>
+        <div class="metric-delta positive">Orders waiting for approval or receipt</div>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">Purchase Pipeline</div>
+        <div class="metric-value">{{ data.metrics.purchasePipelineAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+        <div class="metric-delta">Committed spend not fully received yet</div>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">In Transit Units</div>
+        <div class="metric-value">{{ data.metrics.inTransitUnits }}</div>
+        <div class="metric-delta">Stock on the move between branches</div>
+      </article>
+    </div>
+
+    <article class="surface-card vendor-card">
+      <div class="section-header">
+        <div>
+          <h2>Preferred Vendors</h2>
+          <p>Lead time aur payment terms ke sath supplier catalog.</p>
+        </div>
+      </div>
+
+      <div class="vendor-grid">
+        @for (vendor of data.vendors; track vendor.vendorId) {
+          <div class="vendor-tile">
+            <div class="vendor-head">
+              <div>
+                <strong>{{ vendor.name }}</strong>
+                <p>{{ vendor.contactPerson }} · {{ vendor.city }}</p>
+              </div>
+              <span [class]="statusClass(vendor.status)">{{ vendor.status }}</span>
+            </div>
+
+            <div class="vendor-stats">
+              <div>
+                <span>Phone</span>
+                <strong>{{ vendor.phoneNumber }}</strong>
+              </div>
+              <div>
+                <span>Lead Time</span>
+                <strong>{{ vendor.leadTimeLabel }}</strong>
+              </div>
+              <div>
+                <span>Terms</span>
+                <strong>{{ vendor.paymentTerms }}</strong>
+              </div>
+              <div>
+                <span>Open POs</span>
+                <strong>{{ vendor.openPurchaseOrders }}</strong>
+              </div>
+              <div>
+                <span>Spend</span>
+                <strong>{{ vendor.lifetimeSpend | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </article>
+
+    <div class="procurement-grid">
+      <article class="surface-card table-card">
+        <div class="section-header">
+          <div>
+            <h2>Purchase Orders</h2>
+            <p>Approval, receipt aur pending quantity ka snapshot.</p>
+          </div>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>PO #</th>
+                <th>Vendor</th>
+                <th>Status</th>
+                <th>Expected</th>
+                <th>Units</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of data.purchaseOrders; track order.purchaseOrderId) {
+                <tr>
+                  <td class="mono">{{ order.purchaseOrderNo }}</td>
+                  <td>{{ order.vendorName }}</td>
+                  <td><span [class]="statusClass(order.status)">{{ order.status }}</span></td>
+                  <td>{{ order.expectedAt ? (order.expectedAt | date:'MMM d') : 'TBD' }}</td>
+                  <td class="mono">{{ order.receivedUnits }}/{{ order.orderedUnits }}</td>
+                  <td class="mono">{{ order.totalAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="surface-card table-card">
+        <div class="section-header">
+          <div>
+            <h2>Stock Transfers</h2>
+            <p>Branch transfer visibility for receiving and review.</p>
+          </div>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Transfer #</th>
+                <th>Route</th>
+                <th>Status</th>
+                <th>Units</th>
+                <th>Requested By</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (transfer of data.stockTransfers; track transfer.stockTransferId) {
+                <tr>
+                  <td class="mono">{{ transfer.transferNo }}</td>
+                  <td>{{ transfer.fromBranchName }} → {{ transfer.toBranchName }}</td>
+                  <td><span [class]="statusClass(transfer.status)">{{ transfer.status }}</span></td>
+                  <td class="mono">{{ transfer.units }}</td>
+                  <td>{{ transfer.requestedBy }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </div>
+  </section>
+} @else if (loading()) {
+  <div class="feedback-card">Loading procurement pipeline...</div>
+}
+
+@if (errorMessage()) {
+  <div class="feedback-card error">{{ errorMessage() }}</div>
+}

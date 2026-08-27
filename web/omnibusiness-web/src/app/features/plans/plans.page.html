@@ -1,0 +1,285 @@
+<section class="plans-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Commercial Control</p>
+      <h1>Plans & Modules</h1>
+      <p>
+        Client-wise packages define karein, module access limit karein, aur custom monthly pricing setup karein.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button class="secondary-button" type="button" (click)="reload()">Reload</button>
+      <button class="primary-button" type="button" [disabled]="saving() || !form()" (click)="saveSettings()">
+        {{ saving() ? 'Saving...' : 'Save Plan Setup' }}
+      </button>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="banner error">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div class="banner success">{{ successMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="state-card">Loading plan and module controls...</div>
+  } @else if (form(); as model) {
+    <section class="market-hero">
+      <div class="market-copy">
+        <p class="eyebrow">Pakistan Market Benchmarks</p>
+        <h2>Build packages like a real commercial POS catalog</h2>
+        <p>
+          Yeh pricing cards Pakistani POS market ke hisab se tuned hain. Aap preset package load karke
+          modules, pricing, users, aur branches client-wise customize kar sakte hain.
+        </p>
+      </div>
+
+      <div class="market-benchmarks">
+        @for (item of marketBenchmarks; track item) {
+          <div class="benchmark-chip">
+            <span class="material-symbols-outlined">verified</span>
+            <span>{{ item }}</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="preset-grid">
+      @for (preset of presetCards(); track preset.code) {
+        <article class="preset-card" [class.is-featured]="!!preset.badge" [class.is-active]="activePlanCode() === preset.code">
+          @if (preset.badge) {
+            <div class="preset-badge">{{ preset.badge }}</div>
+          }
+
+          <div class="preset-hero" [attr.data-theme]="preset.theme">
+            <div>
+              <h2>{{ preset.name }}</h2>
+              <p>{{ preset.bestFor }}</p>
+            </div>
+            <div class="preset-price">
+              <span>Monthly price</span>
+              <strong>{{ preset.targetMonthlyPrice | currency:model.currency:'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+          </div>
+
+          <div class="preset-rows">
+            <div class="preset-row">
+              <span>Included users</span>
+              <strong>{{ preset.includedUsers }}</strong>
+            </div>
+            <div class="preset-row">
+              <span>Included branches</span>
+              <strong>{{ preset.includedBranches }}</strong>
+            </div>
+            <div class="preset-row">
+              <span>Checkout coverage</span>
+              <strong>{{ preset.counters }}</strong>
+            </div>
+            <div class="preset-row">
+              <span>Support and chatbot</span>
+              <strong>{{ preset.supportModel }}</strong>
+            </div>
+            <div class="preset-row">
+              <span>Device mode</span>
+              <strong>{{ preset.deviceMode }}</strong>
+            </div>
+            <div class="preset-row">
+              <span>Pricing mix</span>
+              <strong>
+                {{ preset.baseComponent | currency:model.currency:'symbol-narrow':'1.0-0' }} base +
+                {{ preset.moduleCost | currency:model.currency:'symbol-narrow':'1.0-0' }} modules
+              </strong>
+            </div>
+            <div class="preset-row">
+              <span>Enabled modules</span>
+              <strong>{{ preset.moduleCount }}</strong>
+            </div>
+          </div>
+
+          <div class="preset-highlights">
+            @for (highlight of preset.highlights; track highlight) {
+              <span class="capability-chip">{{ highlight }}</span>
+            }
+          </div>
+
+          <button class="primary-button wide" type="button" (click)="applyPreset(preset.code)">
+            {{ activePlanCode() === preset.code ? 'Loaded in Builder' : 'Use This Plan' }}
+          </button>
+        </article>
+      }
+    </section>
+
+    <section class="summary-grid">
+      <article class="summary-card">
+        <span>Enabled Modules</span>
+        <strong>{{ enabledModulesCount() }}</strong>
+        <small>Client ko sirf selected modules nazar aayenge.</small>
+      </article>
+
+      <article class="summary-card">
+        <span>Estimated Monthly Total</span>
+        <strong>{{ estimatedMonthlyTotal() | currency:model.currency:'symbol-narrow':'1.0-0' }}</strong>
+        <small>Base price + enabled module add-on pricing.</small>
+      </article>
+
+      <article class="summary-card">
+        <span>Included Users</span>
+        <strong>{{ model.includedUsers }}</strong>
+        <small>Commercial package me covered staff accounts.</small>
+      </article>
+
+      <article class="summary-card">
+        <span>Included Branches</span>
+        <strong>{{ model.includedBranches }}</strong>
+        <small>Package me covered business locations.</small>
+      </article>
+    </section>
+
+    <section class="commercial-note">
+      <span class="material-symbols-outlined">calculate</span>
+      <div>
+        <strong>Commercial note:</strong>
+        Module pricing editable hai, is liye aap apni margin, support cost, desktop rollout, aur client deal ke
+        hisab se final PKR sell price adjust kar sakte hain.
+      </div>
+    </section>
+
+    <section class="configuration-grid">
+      <article class="config-card">
+        <div class="card-heading">
+          <h2>Plan Configuration</h2>
+          <p>Package naming, currency, base price, aur included limits.</p>
+        </div>
+
+        <div class="field-grid">
+          <label class="field">
+            <span>Plan Name</span>
+            <input [ngModel]="model.planName" (ngModelChange)="updatePlanField('planName', $event)" type="text" />
+          </label>
+
+          <label class="field">
+            <span>Plan Code</span>
+            <input [ngModel]="model.planCode" (ngModelChange)="updatePlanField('planCode', $event)" type="text" />
+          </label>
+
+          <label class="field">
+            <span>Currency</span>
+            <input [ngModel]="model.currency" (ngModelChange)="updatePlanField('currency', $event)" type="text" />
+          </label>
+
+          <label class="field">
+            <span>Base Monthly Price</span>
+            <input [ngModel]="model.baseMonthlyPrice" (ngModelChange)="updateNumericField('baseMonthlyPrice', $event)" type="number" min="0" />
+          </label>
+
+          <label class="field">
+            <span>Included Users</span>
+            <input [ngModel]="model.includedUsers" (ngModelChange)="updateNumericField('includedUsers', $event)" type="number" min="1" />
+          </label>
+
+          <label class="field">
+            <span>Included Branches</span>
+            <input [ngModel]="model.includedBranches" (ngModelChange)="updateNumericField('includedBranches', $event)" type="number" min="1" />
+          </label>
+        </div>
+
+        <label class="switch-row">
+          <input [checked]="model.allowCustomModuleOverrides" (change)="updateCustomModuleOverride($any($event.target).checked)" type="checkbox" />
+          <div>
+            <strong>Allow Custom Module Overrides</strong>
+            <p>Har client ke liye package ke andar custom module mix banaya ja sakta hai.</p>
+          </div>
+        </label>
+      </article>
+
+      <article class="config-card pricing-card">
+        <div class="card-heading">
+          <h2>Commercial Summary</h2>
+          <p>Yahan se aap costing quickly review kar sakte hain.</p>
+        </div>
+
+        <div class="pricing-list">
+          <div class="pricing-row">
+            <span>Base Plan</span>
+            <strong>{{ model.baseMonthlyPrice | currency:model.currency:'symbol-narrow':'1.0-0' }}</strong>
+          </div>
+          <div class="pricing-row">
+            <span>Enabled Add-ons</span>
+            <strong>{{ (estimatedMonthlyTotal() - model.baseMonthlyPrice) | currency:model.currency:'symbol-narrow':'1.0-0' }}</strong>
+          </div>
+          <div class="pricing-row total">
+            <span>Estimated Total</span>
+            <strong>{{ estimatedMonthlyTotal() | currency:model.currency:'symbol-narrow':'1.0-0' }}</strong>
+          </div>
+        </div>
+
+        <div class="pricing-note">
+          Module add-on price editable hai, is liye aap apni costing aur margin ke hisab se package tune kar sakte hain.
+        </div>
+      </article>
+    </section>
+
+    <section class="group-stack">
+      @for (group of moduleGroups(); track group.key) {
+        <article class="group-card">
+          <div class="group-header">
+            <div>
+              <p class="eyebrow">{{ group.title }}</p>
+              <h2>{{ group.description }}</h2>
+            </div>
+            <span class="group-count">{{ group.modules.length }} modules</span>
+          </div>
+
+          <div class="module-list">
+            @for (module of group.modules; track module.moduleKey) {
+              <div class="module-card" [class.is-disabled]="!module.isEnabled">
+                <div class="module-topline">
+                  <div class="module-copy">
+                    <div class="module-icon">
+                      <span class="material-symbols-outlined">{{ module.icon }}</span>
+                    </div>
+                    <div>
+                      <h3>{{ module.title }}</h3>
+                      <p>{{ module.description }}</p>
+                    </div>
+                  </div>
+
+                  <label class="module-toggle">
+                    <span>{{ module.isEnabled ? 'Enabled' : 'Disabled' }}</span>
+                    <input [checked]="module.isEnabled" (change)="toggleModule(module.moduleKey, $any($event.target).checked)" type="checkbox" />
+                  </label>
+                </div>
+
+                <div class="module-meta">
+                  <span class="meta-chip">{{ module.deliveryStatus }}</span>
+                  <span class="meta-chip">{{ module.recommendedPlan }}</span>
+                  @if (module.hasScreen && module.route) {
+                    <a class="meta-link" [routerLink]="module.route">Open screen</a>
+                  } @else {
+                    <span class="meta-chip muted">Roadmap module</span>
+                  }
+                </div>
+
+                <div class="module-pricing">
+                  <label class="field compact">
+                    <span>Add-on Monthly Price (PKR)</span>
+                    <input [ngModel]="module.addOnMonthlyPrice" (ngModelChange)="updateModulePrice(module.moduleKey, $event)" type="number" min="0" />
+                  </label>
+                </div>
+
+                <div class="capability-list">
+                  @for (capability of module.capabilities; track capability) {
+                    <span class="capability-chip">{{ capability }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </article>
+      }
+    </section>
+  }
+</section>

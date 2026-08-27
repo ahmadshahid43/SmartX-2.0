@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+.feedback-card {
+  border: 1px solid var(--outline);
+  border-radius: 18px;
+  padding: 1rem 1.1rem;
+}
+
+.feedback-card.error {
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.feedback-card.success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.library-button,
+.canvas-field-button,
+.add-field-button {
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.library-button {
+  width: 100%;
+}
+
+.canvas-field-button {
+  border-radius: 18px;
+}
+
+.builder-properties input,
+.builder-properties textarea,
+.builder-properties select {
+  background: transparent;
+  border: 1px solid var(--outline);
+  border-radius: 14px;
+  color: var(--text);
+  padding: 0.85rem 0.95rem;
+  width: 100%;
+}
+
+.checkbox-inline {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  gap: 0.65rem;
+}
+
+.danger-button {
+  color: var(--error);
+}

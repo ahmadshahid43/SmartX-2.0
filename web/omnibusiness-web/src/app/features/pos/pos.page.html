@@ -1,0 +1,507 @@
+@if (terminal(); as data) {
+  <section class="pos-layout">
+    <aside class="surface-card pos-command">
+      <div class="command-header">
+        <div>
+          <div class="eyebrow">Retail Counter</div>
+          <h2>Commercial POS Console</h2>
+          <p>Fast cashier flow, offline-ready parking, thermal slip print, aur FBR queue controls.</p>
+        </div>
+
+        <div class="terminal-badge">
+          <span class="material-symbols-outlined">point_of_sale</span>
+          <span>{{ busy() ? 'Syncing' : 'Ready' }}</span>
+        </div>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="feedback-card error">{{ errorMessage() }}</div>
+      }
+
+      @if (paymentMessage()) {
+        <div class="payment-message">{{ paymentMessage() }}</div>
+      }
+
+      <div class="command-metrics">
+        <article class="metric-tile">
+          <span class="metric-label">Units in Cart</span>
+          <strong>{{ cartQuantity() }}</strong>
+        </article>
+        <article class="metric-tile">
+          <span class="metric-label">Held Orders</span>
+          <strong>{{ heldOrders().length }}</strong>
+        </article>
+        <article class="metric-tile">
+          <span class="metric-label">Sale Total</span>
+          <strong>{{ summary().total | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+        </article>
+      </div>
+
+      <div class="command-actions">
+        <button class="primary-button wide" type="button" [disabled]="busy()" (click)="openTender()">
+          <span class="material-symbols-outlined">payments</span>
+          Open Tender
+          <span class="shortcut-pill">F6</span>
+        </button>
+        <button class="secondary-button wide" type="button" [disabled]="busy()" (click)="holdCurrentSale()">
+          <span class="material-symbols-outlined">inventory_2</span>
+          Hold Current Sale
+          <span class="shortcut-pill">F8</span>
+        </button>
+        <button class="secondary-button wide" type="button" [disabled]="busy()" (click)="voidCurrentSale()">
+          <span class="material-symbols-outlined">delete</span>
+          Void Active Sale
+        </button>
+      </div>
+
+      <div class="manual-entry-card">
+        <div class="section-header compact">
+          <div>
+            <strong>Manual Add to Bill</strong>
+            <p>Scanner na ho to SKU, barcode, ya product name se sale continue karein.</p>
+          </div>
+          <span class="status-chip neutral">No Scanner Needed</span>
+        </div>
+
+        <div class="manual-entry-form">
+          <input
+            type="search"
+            placeholder="Example: ELC-101 or Coca Cola"
+            [value]="manualEntry()"
+            (input)="setManualEntry($any($event.target).value)"
+          />
+          <input
+            type="number"
+            min="1"
+            [value]="manualQuantity()"
+            (input)="setManualQuantity($any($event.target).value)"
+          />
+          <button class="secondary-button" type="button" [disabled]="busy()" (click)="addManualProduct()">
+            <span class="material-symbols-outlined">playlist_add</span>
+            Add
+          </button>
+        </div>
+
+        @if (manualMessage()) {
+          <div class="feedback-card">{{ manualMessage() }}</div>
+        }
+
+        @if (manualMatches().length > 0) {
+          <div class="manual-suggestions">
+            @for (product of manualMatches(); track product.productId) {
+              <button class="toggle-pill suggestion-pill" type="button" (click)="addManualProduct(product)">
+                <strong>{{ product.sku }}</strong>
+                <span>{{ product.name }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="held-orders-card">
+        <div class="section-header compact">
+          <div>
+            <strong>Held Tickets</strong>
+            <p>Park & resume sales without losing current bill.</p>
+          </div>
+          <span class="status-chip warning">{{ upcomingTicketLabel() }}</span>
+        </div>
+
+        <div class="held-orders-list">
+          @for (order of heldOrders(); track order.id) {
+            <button class="held-order-item" type="button" [disabled]="busy()" (click)="resumeHeldOrder(order.id)">
+              <div class="held-order-head">
+                <strong>{{ order.label }}</strong>
+                <span class="shortcut-pill">{{ heldTimestamp(order) }}</span>
+              </div>
+              <div class="held-order-meta">
+                <span>{{ order.itemCount }} items</span>
+                <strong>{{ order.total | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+              </div>
+              <div class="held-order-preview">{{ heldPreview(order) }}</div>
+            </button>
+          } @empty {
+            <div class="empty-state small">
+              Abhi koi held order nahi hai. Current sale ko hold karke yahan se later resume kar sakte hain.
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (lastReceipt(); as receipt) {
+        <div class="receipt-actions-card">
+          <div class="section-header compact">
+            <div>
+              <strong>Last Completed Sale</strong>
+              <p>{{ receipt.referenceNo }} • {{ receipt.cashierName }} • {{ receipt.paymentMethod }}</p>
+            </div>
+            <span class="status-chip success">{{ receipt.fbrStatus }}</span>
+          </div>
+
+          <div class="receipt-total-row">
+            <span>Reprint Ready</span>
+            <strong>{{ receipt.summary.total | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+          </div>
+
+          <div class="receipt-action-buttons">
+            <button class="secondary-button wide" type="button" (click)="printLastInvoice()">
+              <span class="material-symbols-outlined">print</span>
+              Print Invoice
+            </button>
+            <button class="secondary-button wide" type="button" (click)="printLastSlip()">
+              <span class="material-symbols-outlined">receipt</span>
+              Print Slip
+            </button>
+          </div>
+        </div>
+      }
+    </aside>
+
+    <article class="surface-card pos-catalog">
+      <div class="catalog-header">
+        <div>
+          <div class="eyebrow">Catalog</div>
+          <h2>Sell Screen</h2>
+          <p>Search, tap, and ring up items quickly for grocery, pharmacy, electronics, ya general retail.</p>
+        </div>
+
+        <div class="catalog-status-row">
+          <span class="status-chip neutral">{{ data.customer.name }}</span>
+          <span class="status-chip neutral">{{ data.customer.pricingTier }}</span>
+          <span class="status-chip success">{{ sendToFbr() ? 'FBR Queue On' : 'Local Invoice' }}</span>
+        </div>
+      </div>
+
+      <div class="catalog-toolbar">
+        <label class="topbar-search search-shell">
+          <span class="material-symbols-outlined">search</span>
+          <input
+            class="pos-search-input"
+            type="search"
+            placeholder="Search products by name or SKU..."
+            [value]="searchTerm()"
+            (input)="setSearchTerm($any($event.target).value)"
+          />
+          <span class="shortcut-pill">F1</span>
+        </label>
+
+        <div class="catalog-toolbar-actions">
+          <button class="scanner-chip" type="button">
+            <span class="material-symbols-outlined">barcode</span>
+            {{ busy() ? 'Syncing...' : 'Scanner Optional' }}
+          </button>
+          <button class="secondary-button compact-button" type="button" [disabled]="busy()" (click)="openTender()">
+            <span class="material-symbols-outlined">point_of_sale</span>
+            Take Payment
+          </button>
+        </div>
+      </div>
+
+      @if (favoriteProducts().length > 0) {
+        <div class="favorites-panel">
+          <div class="section-header compact">
+            <div>
+              <strong>Quick Picks</strong>
+              <p>Most-used cashier items for one-tap billing.</p>
+            </div>
+          </div>
+
+          <div class="favorites-grid">
+            @for (product of favoriteProducts(); track product.productId) {
+              <button class="favorite-chip" type="button" [disabled]="busy()" (click)="addProduct(product)">
+                <span>{{ product.name }}</span>
+                <strong>{{ product.unitPrice | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="category-row">
+        <button
+          class="category-pill"
+          type="button"
+          [class.is-active]="selectedCategory() === 'All'"
+          (click)="setCategory('All')"
+        >
+          All
+        </button>
+        @for (category of data.categories; track category) {
+          <button
+            class="category-pill"
+            type="button"
+            [class.is-active]="selectedCategory() === category"
+            (click)="setCategory(category)"
+          >
+            {{ category }}
+          </button>
+        }
+      </div>
+
+      <div class="product-grid">
+        @for (product of filteredProducts(); track product.productId) {
+          <button class="product-card product-card-button" type="button" [disabled]="busy()" (click)="addProduct(product)">
+            <div class="product-card-top">
+              <div class="product-stock-chip" [class.is-low]="product.isLowStock">
+                {{ stockLabel(product) }}
+              </div>
+              @if (product.isFavorite) {
+                <span class="favorite-star material-symbols-outlined">kid_star</span>
+              }
+            </div>
+            <div class="product-visual">{{ visualLabel(product) }}</div>
+            <div class="product-copy">
+              <h3>{{ product.name }}</h3>
+              <div class="product-sku mono">{{ product.sku }}</div>
+            </div>
+            <div class="product-price-row">
+              <strong class="product-price">{{ product.unitPrice | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+              <span class="add-tag">Tap to Add</span>
+            </div>
+          </button>
+        } @empty {
+          <div class="empty-state">
+            No products matched this search. Try another keyword, SKU, ya category.
+          </div>
+        }
+      </div>
+    </article>
+
+    <aside class="surface-card pos-cart">
+      <div class="cart-header">
+        <div>
+          <div class="eyebrow">Active Bill</div>
+          <h2>Walk-In Customer</h2>
+          <p>{{ data.customer.pricingTier }} • {{ cart().length }} lines • {{ cartQuantity() }} units</p>
+        </div>
+
+        <div class="ticket-pill">
+          <span class="material-symbols-outlined">confirmation_number</span>
+          Sale Live
+        </div>
+      </div>
+
+      <div class="customer-card cart-customer-card">
+        <div class="avatar-circle">{{ data.customer.avatarLetter }}</div>
+        <div>
+          <strong>{{ data.customer.name }}</strong>
+          <span>{{ data.customer.pricingTier }}</span>
+        </div>
+        <span class="material-symbols-outlined">expand_more</span>
+      </div>
+
+      <div class="cart-lines">
+        @for (line of cart(); track line.productId) {
+          <div class="cart-line">
+            <div class="cart-line-head">
+              <div class="cart-line-title">
+                <strong>{{ line.name }}</strong>
+                <span>{{ line.unitPrice | currency:'PKR':'symbol-narrow':'1.0-0' }} each</span>
+              </div>
+              <button class="icon-text-button" type="button" [disabled]="busy()" (click)="removeLine(line.productId)">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div class="cart-line-body">
+              <div class="quantity-chip">
+                <button type="button" [disabled]="busy()" (click)="updateQuantity(line.productId, -1)">-</button>
+                <strong>{{ line.quantity }}</strong>
+                <button type="button" [disabled]="busy()" (click)="updateQuantity(line.productId, 1)">+</button>
+              </div>
+              <strong class="mono">{{ lineTotal(line) | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-state">
+            Cart empty hai. Product cards ya manual add section se bill start karein.
+          </div>
+        }
+      </div>
+
+      <div class="totals-panel">
+        <div class="summary-grid">
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <strong>{{ summary().subtotal | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+          </div>
+          <div class="summary-row text-success">
+            <span>Discount</span>
+            <strong>- {{ summary().discount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+          </div>
+          <div class="summary-row">
+            <span>Tax (17%)</span>
+            <strong>{{ summary().tax | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+          </div>
+          <div class="summary-row total-row">
+            <span>Grand Total</span>
+            <strong>{{ summary().total | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+          </div>
+        </div>
+
+        <div class="payment-strip">
+          <label class="field compact-field">
+            <span>Payment Method</span>
+            <select [value]="selectedPaymentMethod()" (change)="setPaymentMethod($any($event.target).value)">
+              @for (method of paymentMethods; track method) {
+                <option [value]="method">{{ method }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="field compact-field">
+            <span>Received Amount</span>
+            <input
+              type="number"
+              min="0"
+              [value]="receivedAmount() ?? summary().total"
+              (input)="setReceivedAmount($any($event.target).value)"
+            />
+          </label>
+        </div>
+
+        <div class="quick-cash-row">
+          @for (amount of quickCashAmounts(); track amount) {
+            <button class="quick-cash-button" type="button" [disabled]="busy()" (click)="applyQuickCashAmount(amount)">
+              {{ amount | currency:'PKR':'symbol-narrow':'1.0-0' }}
+            </button>
+          }
+        </div>
+
+        <div class="summary-row">
+          <span>Balance Due</span>
+          <strong>{{ remainingBalance() | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+        </div>
+        <div class="summary-row">
+          <span>Change Due</span>
+          <strong>{{ changeDue() | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+        </div>
+
+        <label class="checkbox-inline">
+          <input
+            type="checkbox"
+            [checked]="sendToFbr()"
+            (change)="setSendToFbr($any($event.target).checked)"
+          />
+          <span>Queue / send invoice for FBR compliance</span>
+        </label>
+
+        <label class="checkbox-inline">
+          <input
+            type="checkbox"
+            [checked]="autoPrintSlip()"
+            (change)="setAutoPrintSlip($any($event.target).checked)"
+          />
+          <span>Auto print thermal slip after payment</span>
+        </label>
+
+        <button class="primary-button wide xl-button" type="button" [disabled]="busy()" (click)="openTender()">
+          <span class="material-symbols-outlined">payments</span>
+          {{ sendToFbr() ? 'Take Payment + Queue FBR' : 'Take Payment' }}
+        </button>
+
+        <div class="pos-shortcuts">
+          <span><strong>F1</strong> Search</span>
+          <span><strong>F6</strong> Tender</span>
+          <span><strong>F8</strong> Hold</span>
+          <span><strong>F10</strong> Pay</span>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  @if (tenderOpen()) {
+    <div class="tender-backdrop" (click)="closeTender()"></div>
+
+    <section aria-modal="true" class="surface-card tender-modal" role="dialog">
+      <div class="tender-topbar">
+        <div>
+          <div class="eyebrow">Tender Screen</div>
+          <h2>{{ summary().total | currency:'PKR':'symbol-narrow':'1.0-0' }}</h2>
+          <p>{{ cartQuantity() }} units • {{ selectedPaymentMethod() }} • {{ sendToFbr() ? 'FBR Queue On' : 'Local Invoice Only' }}</p>
+        </div>
+
+        <button class="icon-button" type="button" (click)="closeTender()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="tender-methods">
+        @for (method of paymentMethods; track method) {
+          <button
+            class="method-pill"
+            type="button"
+            [class.is-active]="selectedPaymentMethod() === method"
+            (click)="setPaymentMethod(method)"
+          >
+            {{ method }}
+          </button>
+        }
+      </div>
+
+      <label class="field tender-field">
+        <span>Received Amount</span>
+        <input
+          type="number"
+          min="0"
+          [value]="receivedAmount() ?? summary().total"
+          (input)="setReceivedAmount($any($event.target).value)"
+        />
+      </label>
+
+      <div class="quick-cash-row modal-quick-cash">
+        @for (amount of quickCashAmounts(); track amount) {
+          <button class="quick-cash-button" type="button" [disabled]="busy()" (click)="applyQuickCashAmount(amount)">
+            {{ amount | currency:'PKR':'symbol-narrow':'1.0-0' }}
+          </button>
+        }
+      </div>
+
+      <div class="tender-summary">
+        <div class="tender-summary-card">
+          <span>Received</span>
+          <strong>{{ (receivedAmount() ?? summary().total) | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+        </div>
+        <div class="tender-summary-card">
+          <span>Remaining</span>
+          <strong>{{ remainingBalance() | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+        </div>
+        <div class="tender-summary-card highlight">
+          <span>Change</span>
+          <strong>{{ changeDue() | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+        </div>
+      </div>
+
+      <div class="tender-options">
+        <label class="checkbox-inline">
+          <input
+            type="checkbox"
+            [checked]="sendToFbr()"
+            (change)="setSendToFbr($any($event.target).checked)"
+          />
+          <span>Queue invoice for FBR</span>
+        </label>
+
+        <label class="checkbox-inline">
+          <input
+            type="checkbox"
+            [checked]="autoPrintSlip()"
+            (change)="setAutoPrintSlip($any($event.target).checked)"
+          />
+          <span>Auto print thermal slip</span>
+        </label>
+      </div>
+
+      <div class="tender-actions">
+        <button class="secondary-button wide" type="button" [disabled]="busy()" (click)="holdCurrentSale()">
+          <span class="material-symbols-outlined">inventory_2</span>
+          Hold Instead
+        </button>
+        <button class="primary-button wide xl-button" type="button" [disabled]="busy()" (click)="completePayment()">
+          <span class="material-symbols-outlined">payments</span>
+          Complete Payment
+        </button>
+      </div>
+    </section>
+  }
+}

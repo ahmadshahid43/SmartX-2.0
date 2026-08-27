@@ -1,0 +1,146 @@
+@if (hub(); as data) {
+  <section class="page-stack">
+    <div class="page-header with-actions">
+      <div>
+        <h1>Customers & Loyalty</h1>
+        <p>Client ke retail counter ke liye CRM, loyalty, store credit aur repeat-buyer visibility yahan se manage hoti hai.</p>
+      </div>
+
+      <div class="page-actions">
+        <a class="secondary-button compact-button" routerLink="/users">
+          <span class="material-symbols-outlined">badge</span>
+          Manage Staff
+        </a>
+        <button class="primary-button compact-button" type="button" (click)="reload()">
+          <span class="material-symbols-outlined">refresh</span>
+          Refresh Hub
+        </button>
+      </div>
+    </div>
+
+    <div class="metric-grid">
+      <article class="surface-card metric-card">
+        <div class="metric-label">Active Customers</div>
+        <div class="metric-value">{{ data.metrics.totalCustomers }}</div>
+        <div class="metric-delta positive">{{ data.metrics.activeInLast30Days }} active in the last 30 days</div>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">Loyalty Members</div>
+        <div class="metric-value">{{ data.metrics.loyaltyMembers }}</div>
+        <div class="metric-delta positive">Tiered members ready for promotions</div>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">Lifetime Revenue</div>
+        <div class="metric-value">{{ data.metrics.lifetimeRevenue | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+        <div class="metric-delta">Combined customer purchase history</div>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">Marketing Reach</div>
+        <div class="metric-value">{{ marketingReach() }}</div>
+        <div class="metric-delta">Profiles opted in for campaigns</div>
+      </article>
+    </div>
+
+    <div class="customers-layout">
+      <article class="surface-card customer-list-card">
+        <div class="section-header">
+          <div>
+            <h2>Customer Profiles</h2>
+            <p>Walk-in se loyalty member tak saare profiles yahan available hain.</p>
+          </div>
+          <a class="secondary-button compact-button" routerLink="/pos">Open POS</a>
+        </div>
+
+        <div class="customer-list">
+          @for (customer of data.customers; track customer.customerId) {
+            <button
+              class="customer-row"
+              type="button"
+              [class.is-selected]="selectedCustomer()?.customerId === customer.customerId"
+              (click)="selectCustomer(customer)"
+            >
+              <div class="customer-avatar">{{ customer.avatarLetter }}</div>
+              <div class="customer-copy">
+                <strong>{{ customer.name }}</strong>
+                <span>{{ customer.pricingTier }}</span>
+                <span class="mono">{{ customer.phoneNumber || customer.email || 'No contact saved' }}</span>
+              </div>
+              <div class="customer-meta">
+                <span [class]="loyaltyClass(customer.loyaltyTier)">{{ customer.loyaltyTier }}</span>
+                <strong>{{ customer.lifetimeValue | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+              </div>
+            </button>
+          } @empty {
+            <div class="feedback-card">Abhi tak koi customer profile configured nahi hai.</div>
+          }
+        </div>
+      </article>
+
+      @if (selectedCustomer(); as customer) {
+        <aside class="surface-card customer-detail-card">
+          <div class="detail-hero">
+            <div class="detail-avatar">{{ customer.avatarLetter }}</div>
+            <div>
+              <div class="eyebrow">Selected Profile</div>
+              <h2>{{ customer.name }}</h2>
+              <p>{{ customer.isWalkIn ? 'Default walk-in profile' : 'Saved customer for repeat sales and loyalty' }}</p>
+            </div>
+          </div>
+
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span>Loyalty Tier</span>
+              <strong>{{ customer.loyaltyTier }}</strong>
+            </div>
+            <div class="detail-item">
+              <span>Loyalty Points</span>
+              <strong>{{ customer.loyaltyPoints }}</strong>
+            </div>
+            <div class="detail-item">
+              <span>Store Credit</span>
+              <strong>{{ customer.storeCreditBalance | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+            <div class="detail-item">
+              <span>Gift Card</span>
+              <strong>{{ customer.giftCardBalance | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+            <div class="detail-item">
+              <span>Visit Count</span>
+              <strong>{{ customer.visitCount }}</strong>
+            </div>
+            <div class="detail-item">
+              <span>Lifetime Value</span>
+              <strong>{{ customer.lifetimeValue | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+            <div class="detail-item">
+              <span>Contact</span>
+              <strong>{{ customer.phoneNumber || customer.email || 'Not captured yet' }}</strong>
+            </div>
+            <div class="detail-item">
+              <span>Last Visit</span>
+              <strong>{{ customer.lastVisitAt ? (customer.lastVisitAt | date:'MMM d, y h:mm a') : 'No sales yet' }}</strong>
+            </div>
+          </div>
+
+          <div class="surface-note">
+            <span [class]="customer.marketingOptIn ? 'status-chip success' : 'status-chip neutral'">
+              {{ customer.marketingOptIn ? 'Marketing Consent On' : 'No Marketing Consent' }}
+            </span>
+            <p>
+              Yeh foundation client-specific loyalty, memberships, gift cards aur future WhatsApp/SMS campaigns ke liye ready rakhi gayi hai.
+            </p>
+          </div>
+        </aside>
+      }
+    </div>
+  </section>
+} @else if (loading()) {
+  <div class="feedback-card">Loading customers hub...</div>
+}
+
+@if (errorMessage()) {
+  <div class="feedback-card error">{{ errorMessage() }}</div>
+}

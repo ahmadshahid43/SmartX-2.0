@@ -1,0 +1,136 @@
+{
+  "tenant": {
+    "id": "11111111-1111-1111-1111-111111111111",
+    "slug": "smartx-workspace",
+    "name": "SmartX Workspace",
+    "industryTemplate": "Configurable ERP + POS",
+    "subscriptionPlan": "Premium"
+  },
+  "company": {
+    "id": "22222222-2222-2222-2222-222222222222",
+    "tenantId": "11111111-1111-1111-1111-111111111111",
+    "name": "SmartX Workspace",
+    "baseCurrency": "PKR",
+    "timeZone": "Asia/Karachi",
+    "country": "Pakistan"
+  },
+  "adminUser": {
+    "id": "33333333-3333-3333-3333-333333333333",
+    "tenantId": "11111111-1111-1111-1111-111111111111",
+    "branchId": "44444444-4444-4444-4444-444444444441",
+    "email": "admin@omnibusiness.local",
+    "displayName": "Admin",
+    "role": "Owner",
+    "passwordHash": "CcaOBb0xjXtgwLSwJ44cuw==:TOi3dQTqMdEqW08kDhhTRr5kEAqxcPLmA91s9COi4n0="
+  },
+  "users": [
+    {
+      "id": "33333333-3333-3333-3333-333333333333",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "branchId": "44444444-4444-4444-4444-444444444441",
+      "email": "admin@omnibusiness.local",
+      "displayName": "Admin",
+      "role": "Owner",
+      "passwordHash": "CcaOBb0xjXtgwLSwJ44cuw==:TOi3dQTqMdEqW08kDhhTRr5kEAqxcPLmA91s9COi4n0="
+    },
+    {
+      "id": "16d3cb0e-15be-4114-a7be-beb22a3d96a6",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "branchId": "44444444-4444-4444-4444-444444444441",
+      "email": "ahmad@smartx.local",
+      "displayName": "Ahmad",
+      "role": "Cashier",
+      "passwordHash": "TBtosQspEVvZZh80duU7iw==:Xp62DA2KwuBREQvaZJ+/OJlmahoFIpmtd8k18QWdp0Y="
+    }
+  ],
+  "activeCustomer": {
+    "name": "Walk-in Customer",
+    "pricingTier": "Retail Pricing",
+    "avatarLetter": "W"
+  },
+  "branches": [
+    {
+      "id": "44444444-4444-4444-4444-444444444441",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "code": "MAIN",
+      "name": "Main Branch",
+      "warehouseName": "Main Warehouse",
+      "isPrimary": true
+    }
+  ],
+  "dailyFigures": [],
+  "salesTrend": [],
+  "topSelling": [],
+  "branchPerformance": [],
+  "products": [],
+  "recentTransactions": [],
+  "activeCart": [],
+  "customers": [],
+  "stockAdjustments": [],
+  "vendors": [],
+  "purchaseOrders": [],
+  "stockTransfers": [],
+  "cashShifts": [],
+  "subscriptionSettings": {
+    "planCode": "premium",
+    "planName": "Premium",
+    "currency": "PKR",
+    "baseMonthlyPrice": 14999,
+    "includedUsers": 50,
+    "includedBranches": 10,
+    "allowCustomModuleOverrides": true,
+    "moduleEntitlements": [
+      { "moduleKey": "dashboard-analytics", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "pos-checkout", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "counter-orders", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "book-orders", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "hold-and-resume", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "customer-profiles", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "split-payments", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "late-payments", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "service-cards", "enabled": true, "addOnMonthlyPrice": 5021 },
+      { "moduleKey": "returns-refunds", "enabled": true, "addOnMonthlyPrice": 4000 },
+      { "moduleKey": "inventory-core", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "trade-in", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "stock-take", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "grn-receiving", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "warehouse-reports", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "barcode-suite", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "supplier-management", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "purchase-orders", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "expense-management", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "ledger-accounting", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "profit-loss", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "fbr-compliance", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "pos-configuration", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "order-listing", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "booking-analytics", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "reporting-suite", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "tax-and-refund-reporting", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "expiry-and-usage-reporting", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "social-publishing", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "customer-notifications", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "employee-management", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "role-permissions", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "no-code-builder", "enabled": true, "addOnMonthlyPrice": 0 },
+      { "moduleKey": "plan-and-module-control", "enabled": true, "addOnMonthlyPrice": 0 }
+    ]
+  },
+  "nextSaleSequence": 1,
+  "productCustomFields": {
+    "id": "product-custom-fields",
+    "title": "Product Custom Fields",
+    "description": "Configure additional data points collected for all inventory items.",
+    "selectedFieldId": "",
+    "library": [
+      { "key": "short-text", "label": "Short Text", "group": "Basic", "icon": "text_fields" },
+      { "key": "long-text", "label": "Long Text", "group": "Basic", "icon": "notes" },
+      { "key": "number", "label": "Number", "group": "Basic", "icon": "tag" },
+      { "key": "date", "label": "Date", "group": "Basic", "icon": "calendar_today" },
+      { "key": "dropdown", "label": "Dropdown", "group": "Basic", "icon": "arrow_drop_down_circle" },
+      { "key": "formula", "label": "Formula", "group": "Advanced", "icon": "functions" },
+      { "key": "lookup", "label": "Lookup", "group": "Advanced", "icon": "manage_search" }
+    ],
+    "canvas": []
+  }
+}

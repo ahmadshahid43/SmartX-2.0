@@ -1,0 +1,208 @@
+<div class="app-shell">
+  @if (isSidebarOpen()) {
+    <button class="sidebar-backdrop" type="button" aria-label="Close navigation" (click)="closeSidebar()"></button>
+  }
+
+  @if (isSupportOpen()) {
+    <button class="support-backdrop" type="button" aria-label="Close support" (click)="closeSupport()"></button>
+  }
+
+  <aside class="sidebar" [class.is-open]="isSidebarOpen()">
+    <div class="brand-block">
+      <div class="brand-mark">
+        <span class="material-symbols-outlined">deployed_code</span>
+      </div>
+      <div class="brand-copy">
+        <div class="brand-wordmark">
+          <span class="brand-smart">SmartX</span>
+          <span class="brand-erp">ERP</span>
+        </div>
+        <div class="brand-subtitle">Enterprise Command</div>
+      </div>
+    </div>
+
+    @if (workspaceContext(); as context) {
+      <div class="branch-card">
+        <div class="branch-avatar">
+          <span class="material-symbols-outlined">storefront</span>
+        </div>
+        <div>
+          <div class="branch-name">{{ context.branches[0]?.name }}</div>
+          <div class="branch-subtitle">{{ context.branches[0]?.warehouseName }}</div>
+        </div>
+      </div>
+
+      <button class="primary-button wide" type="button" (click)="closeSidebar()">
+        <span class="material-symbols-outlined">add</span>
+        New Transaction
+      </button>
+    }
+
+    <nav class="sidebar-nav">
+      @for (item of visibleNavigationItems(); track item.route + item.label) {
+        <a [routerLink]="item.route" routerLinkActive="is-active" class="nav-link" (click)="closeSidebar()">
+          <span class="material-symbols-outlined">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="footer-link" type="button" (click)="openSupport()">
+        <span class="material-symbols-outlined">contact_support</span>
+        Support
+      </button>
+      <button class="footer-link" type="button" (click)="logout()">
+        <span class="material-symbols-outlined">logout</span>
+        Sign Out
+      </button>
+    </div>
+  </aside>
+
+  <div class="shell-content">
+    <header class="topbar">
+      <button class="icon-button mobile-nav-button" type="button" aria-label="Toggle navigation" (click)="toggleSidebar()">
+        <span class="material-symbols-outlined">{{ isSidebarOpen() ? 'close' : 'menu' }}</span>
+      </button>
+
+      <label class="topbar-search">
+        <span class="material-symbols-outlined">search</span>
+        <input type="search" placeholder="Search orders, items..." />
+      </label>
+
+      <div class="topbar-actions">
+        <button class="icon-button" type="button" (click)="toggleTheme()">
+          <span class="material-symbols-outlined">
+            {{ themeService.theme() === 'dark' ? 'light_mode' : 'dark_mode' }}
+          </span>
+        </button>
+        <button class="icon-button" type="button">
+          <span class="material-symbols-outlined">notifications</span>
+        </button>
+        <button class="icon-button" type="button" (click)="openSupport()">
+          <span class="material-symbols-outlined">help</span>
+        </button>
+        <button class="icon-button" type="button" routerLink="/plans">
+          <span class="material-symbols-outlined">settings</span>
+        </button>
+
+        @if (authService.currentUser(); as user) {
+          <div class="profile-chip">
+            <div class="profile-avatar">{{ user.displayName.charAt(0) }}</div>
+            <div class="profile-copy">
+              <span>{{ user.displayName }}</span>
+              <small>{{ user.role }}</small>
+            </div>
+          </div>
+        }
+      </div>
+    </header>
+
+    <main class="page-frame">
+      <router-outlet />
+    </main>
+  </div>
+
+  <button class="support-fab" type="button" aria-label="Open support assistant" (click)="toggleSupport()">
+    <span class="material-symbols-outlined">support_agent</span>
+    <span>Support</span>
+  </button>
+
+  <aside class="support-drawer" [class.is-open]="isSupportOpen()">
+    <div class="support-header">
+      <div>
+        <div class="eyebrow">Support Center</div>
+        <h2>Onboarding, rollout, and chatbot help</h2>
+        <p>Plans, inventory, FBR, printing, staff setup, aur client demo help ek jagah.</p>
+      </div>
+
+      <button class="icon-button" type="button" aria-label="Close support" (click)="closeSupport()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div class="support-body">
+      <section class="support-highlights">
+        @for (highlight of supportHighlights; track highlight.title) {
+          <article class="support-card">
+            <div class="support-card-icon">
+              <span class="material-symbols-outlined">{{ highlight.icon }}</span>
+            </div>
+            <div>
+              <h3>{{ highlight.title }}</h3>
+              <p>{{ highlight.description }}</p>
+            </div>
+          </article>
+        }
+      </section>
+
+      <section class="support-actions">
+        <h3>Quick actions</h3>
+        <div class="support-action-list">
+          @for (prompt of supportQuickPrompts; track prompt) {
+            <button class="support-chip" type="button" (click)="sendQuickSupportPrompt(prompt)">
+              {{ prompt }}
+            </button>
+          }
+        </div>
+      </section>
+
+      <section class="support-links">
+        <a class="support-link-card" routerLink="/plans" (click)="closeSupport()">
+          <span class="material-symbols-outlined">tune</span>
+          <div>
+            <strong>Open Plans & Modules</strong>
+            <small>Client package, pricing, and module restrictions</small>
+          </div>
+        </a>
+        <a class="support-link-card" routerLink="/inventory" (click)="closeSupport()">
+          <span class="material-symbols-outlined">inventory_2</span>
+          <div>
+            <strong>Open Inventory</strong>
+            <small>Import stock, categories, and barcode workflows</small>
+          </div>
+        </a>
+        <a class="support-link-card" routerLink="/users" (click)="closeSupport()">
+          <span class="material-symbols-outlined">badge</span>
+          <div>
+            <strong>Open Users & Access</strong>
+            <small>Create staff, roles, and permission rules</small>
+          </div>
+        </a>
+      </section>
+
+      <section class="support-chat">
+        <div class="support-chat-header">
+          <h3>Chatbot</h3>
+          <p>Ask about pricing, inventory import, users, printing, ya FBR.</p>
+        </div>
+
+        <div class="chat-stream">
+          @for (message of supportMessages(); track message.id) {
+            <article class="chat-bubble" [class.is-user]="message.author === 'user'">
+              @if (message.title) {
+                <strong>{{ message.title }}</strong>
+              }
+              <p>{{ message.text }}</p>
+            </article>
+          }
+        </div>
+
+        <label class="chat-input">
+          <span class="material-symbols-outlined">chat</span>
+          <input
+            type="text"
+            [ngModel]="supportDraft()"
+            (ngModelChange)="supportDraft.set($event)"
+            (keydown.enter)="sendSupportMessage()"
+            placeholder="Example: inventory import kaise karni hai?"
+          />
+        </label>
+
+        <button class="primary-button wide" type="button" (click)="sendSupportMessage()">
+          Send Message
+        </button>
+      </section>
+    </div>
+  </aside>
+</div>

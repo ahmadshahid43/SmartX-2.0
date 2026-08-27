@@ -1,0 +1,103 @@
+<div class="smartx-login">
+  <section class="editorial-side">
+    <div class="editorial-watermark">SMARTX</div>
+
+    <div class="editorial-copy">
+      <div class="editorial-brand">
+        <span class="brand-smart">SMARTX</span>
+        <span class="brand-erp">ERP</span>
+      </div>
+
+      <div class="editorial-message">
+        <h2>Smart Business. Connected.</h2>
+        <p>
+          Manage sales, inventory, finance, procurement, users, and operations from one intelligent platform designed for real client rollouts.
+        </p>
+      </div>
+
+      <div class="editorial-ticker">
+        <span>Sales</span>
+        <span class="divider">—</span>
+        <span>Inventory</span>
+        <span class="divider">—</span>
+        <span>Finance</span>
+        <span class="divider">—</span>
+        <span>Procurement</span>
+        <span class="divider">—</span>
+        <span>Users</span>
+        <span class="divider">—</span>
+        <span>Operations</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="signin-side">
+    <div class="mobile-brand">
+      <span class="brand-smart">SMARTX</span>
+      <span class="brand-erp">ERP</span>
+    </div>
+
+    <div class="signin-shell">
+      <div class="login-toolbar">
+        <div>
+          <div class="eyebrow">SmartX Portal</div>
+          <h1>Sign In</h1>
+          <p class="support-copy">Enter your credentials to continue.</p>
+        </div>
+
+        <button class="icon-button" type="button" aria-label="Toggle theme" (click)="toggleTheme()">
+          <span class="material-symbols-outlined">
+            {{ themeService.theme() === 'dark' ? 'light_mode' : 'dark_mode' }}
+          </span>
+        </button>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="submit()" class="signin-form">
+        <label class="minimal-field">
+          <span>Username or Email</span>
+          <input type="text" formControlName="email" placeholder="Enter username or email" autocomplete="username" />
+        </label>
+
+        <label class="minimal-field">
+          <div class="password-label-row">
+            <span>Password</span>
+          </div>
+
+          <div class="password-shell">
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Enter your password"
+            />
+            <button class="password-toggle" type="button" aria-label="Toggle password visibility" (click)="togglePasswordVisibility()">
+              <span class="material-symbols-outlined">
+                {{ showPassword() ? 'visibility_off' : 'visibility' }}
+              </span>
+            </button>
+          </div>
+        </label>
+
+        <label class="remember-row" for="remember-me">
+          <input id="remember-me" type="checkbox" />
+          <span>Remember me</span>
+        </label>
+
+        @if (errorMessage()) {
+          <div class="validation-message">{{ errorMessage() }}</div>
+        }
+
+        <button class="smartx-submit" type="submit" [disabled]="isSubmitting()">
+          <span>{{ isSubmitting() ? 'Signing In...' : 'Log In to Portal' }}</span>
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </form>
+
+      <div class="secure-copy">
+        <span class="material-symbols-outlined">verified_user</span>
+        <span>Secure Enterprise Login</span>
+      </div>
+    </div>
+
+    <div class="signin-footer">SmartX ERP © 2026</div>
+  </section>
+</div>

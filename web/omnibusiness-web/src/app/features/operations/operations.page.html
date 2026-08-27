@@ -1,0 +1,146 @@
+@if (hub(); as data) {
+  <section class="page-stack">
+    <div class="page-header with-actions">
+      <div>
+        <h1>Operations & Compliance Hub</h1>
+        <p>Cash shifts, offline-safe invoices, FBR visibility aur advanced POS roadmap modules ek jagah.</p>
+      </div>
+
+      <div class="page-actions">
+        <a class="secondary-button compact-button" routerLink="/pos">
+          <span class="material-symbols-outlined">point_of_sale</span>
+          Return to POS
+        </a>
+        <button class="primary-button compact-button" type="button" (click)="reload()">
+          <span class="material-symbols-outlined">refresh</span>
+          Refresh Ops
+        </button>
+      </div>
+    </div>
+
+    <div class="metric-grid">
+      <article class="surface-card metric-card">
+        <div class="metric-label">Open Registers</div>
+        <div class="metric-value">{{ data.cash.openRegisters }}</div>
+        <div class="metric-delta">Live cashier counters currently running</div>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">Today Cash Sales</div>
+        <div class="metric-value">{{ data.cash.todayCashSales | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+        <div class="metric-delta">Cash transactions counted for the active day</div>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">Queued FBR Invoices</div>
+        <div class="metric-value">{{ data.compliance.queuedFbrInvoices }}</div>
+        <div class="metric-delta warning">Offline-protected invoices waiting to sync</div>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">Failed / Rejected</div>
+        <div class="metric-value">{{ data.compliance.failedInvoices }}</div>
+        <div class="metric-delta negative">Needs retry or manager intervention</div>
+      </article>
+    </div>
+
+    <div class="operations-grid">
+      <article class="surface-card shift-card">
+        <div class="section-header">
+          <div>
+            <h2>Cash Shift Control</h2>
+            <p>Opening float, counted cash aur variance ki quick review.</p>
+          </div>
+        </div>
+
+        <div class="shift-stack">
+          @for (shift of data.cashShifts; track shift.cashShiftId) {
+            <div class="shift-row">
+              <div class="shift-copy">
+                <strong>{{ shift.cashierName }}</strong>
+                <span>{{ shift.registerName }}</span>
+                <span>{{ shift.openedAt | date:'MMM d, h:mm a' }}</span>
+              </div>
+
+              <div class="shift-totals">
+                <span [class]="statusClass(shift.status)">{{ shift.status }}</span>
+                <strong>{{ shift.expectedCash | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+                <span [class]="varianceClass(shift.variance)">
+                  {{ shift.variance >= 0 ? '+' : '' }}{{ shift.variance | currency:'PKR':'symbol-narrow':'1.0-0' }}
+                </span>
+              </div>
+            </div>
+          }
+        </div>
+      </article>
+
+      <aside class="surface-card compliance-card">
+        <div class="section-header">
+          <div>
+            <h2>Compliance Snapshot</h2>
+            <p>Pakistan retail fiscal workflow ke liye quick visibility.</p>
+          </div>
+        </div>
+
+        <div class="compliance-list">
+          <div class="compliance-item">
+            <span>Reported Invoices</span>
+            <strong>{{ data.compliance.reportedInvoices }}</strong>
+          </div>
+          <div class="compliance-item">
+            <span>Pending Approvals</span>
+            <strong>{{ data.compliance.pendingApprovals }}</strong>
+          </div>
+          <div class="compliance-item">
+            <span>Offline Protected Sales</span>
+            <strong>{{ data.compliance.offlineProtectedSales }}</strong>
+          </div>
+          <div class="compliance-item">
+            <span>Expected Drawer Cash</span>
+            <strong>{{ data.cash.expectedDrawerCash | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+          </div>
+          <div class="compliance-item">
+            <span>Net Variance</span>
+            <strong [class]="varianceClass(data.cash.netVariance)">
+              {{ data.cash.netVariance >= 0 ? '+' : '' }}{{ data.cash.netVariance | currency:'PKR':'symbol-narrow':'1.0-0' }}
+            </strong>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="module-groups">
+      @for (group of data.moduleGroups; track group.title) {
+        <article class="surface-card module-group-card">
+          <div class="section-header">
+            <div>
+              <h2>{{ group.title }}</h2>
+              <p>{{ group.description }}</p>
+            </div>
+          </div>
+
+          <div class="module-grid">
+            @for (module of group.modules; track module.title) {
+              <a class="module-card" [routerLink]="module.route">
+                <div class="module-icon">
+                  <span class="material-symbols-outlined">{{ module.icon }}</span>
+                </div>
+                <div class="module-copy">
+                  <strong>{{ module.title }}</strong>
+                  <p>{{ module.description }}</p>
+                </div>
+                <span [class]="statusClass(module.status)">{{ module.status }}</span>
+              </a>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+} @else if (loading()) {
+  <div class="feedback-card">Loading operations hub...</div>
+}
+
+@if (errorMessage()) {
+  <div class="feedback-card error">{{ errorMessage() }}</div>
+}

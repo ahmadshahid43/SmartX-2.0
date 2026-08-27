@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)' == ''">$(MSBuildThisFileDirectory).artifacts\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath Condition="'$(BaseOutputPath)' == ''">$(MSBuildThisFileDirectory).artifacts\bin\$(MSBuildProjectName)\</BaseOutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**\obj\**;**\bin\**;**\obj-alt\**;**\bin-alt\**;**\.artifacts\**</DefaultItemExcludes>
+    <DefaultItemExcludesInProjectFolder>$(DefaultItemExcludesInProjectFolder);obj\**;bin\**;obj-alt\**;bin-alt\**;.artifacts\**</DefaultItemExcludesInProjectFolder>
+  </PropertyGroup>
+</Project>

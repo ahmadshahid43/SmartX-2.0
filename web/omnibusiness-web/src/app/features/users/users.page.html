@@ -1,0 +1,120 @@
+<section class="page-stack">
+  <div class="page-header with-actions">
+    <div>
+      <h1>Users & Access</h1>
+      <p>Yahan se cashier, manager, aur back-office users banaen aur unki branch access configure karein.</p>
+    </div>
+
+    <div class="page-actions">
+      <button class="secondary-button compact-button" type="button" (click)="reload()">
+        <span class="material-symbols-outlined">refresh</span>
+        Refresh
+      </button>
+      <button class="primary-button compact-button" type="button" (click)="startNewUser()">
+        <span class="material-symbols-outlined">person_add</span>
+        New User
+      </button>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="feedback-card error">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div class="feedback-card success">{{ successMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="feedback-card">Loading users and access settings...</div>
+  }
+
+  <div class="users-layout">
+    <article class="surface-card user-list-card">
+      <div class="section-header">
+        <div>
+          <h2>Workspace Staff</h2>
+          <p>{{ users()?.items?.length ?? 0 }} active local users</p>
+        </div>
+      </div>
+
+      <div class="user-list">
+        @for (user of users()?.items ?? []; track user.userId) {
+          <button
+            class="user-row"
+            type="button"
+            [class.is-selected]="selectedUserId() === user.userId"
+            (click)="selectUser(user)"
+          >
+            <div class="user-avatar">{{ user.displayName.charAt(0) }}</div>
+            <div class="user-copy">
+              <strong>{{ user.displayName }}</strong>
+              <span class="mono">{{ user.email }}</span>
+              <span>{{ user.branchName }}</span>
+            </div>
+            <span [class]="roleClass(user.role)">{{ user.role }}</span>
+          </button>
+        } @empty {
+          <div class="feedback-card">No users are configured yet.</div>
+        }
+      </div>
+    </article>
+
+    <aside class="surface-card access-card">
+      <div class="section-header">
+        <div>
+          <h2>{{ selectedUser() ? 'Edit User' : 'Create User' }}</h2>
+          <p>Client ke liye login aur branch-level UI access yahan manage hota hai.</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <label class="field">
+          <span>Full Name</span>
+          <input type="text" [(ngModel)]="userForm.displayName" />
+        </label>
+
+        <label class="field">
+          <span>Email / Username</span>
+          <input type="email" [(ngModel)]="userForm.email" />
+        </label>
+
+        <label class="field">
+          <span>Role</span>
+          <select [(ngModel)]="userForm.role">
+            @for (role of roles; track role) {
+              <option [value]="role">{{ role }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Branch</span>
+          <select [(ngModel)]="userForm.branchId">
+            @for (branch of branchOptions(); track branch.id) {
+              <option [value]="branch.id">{{ branch.name }} - {{ branch.warehouseName }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Password {{ selectedUser() ? '(leave blank to keep current)' : '' }}</span>
+          <input type="password" [(ngModel)]="userForm.password" />
+        </label>
+      </div>
+
+      <div class="credential-note">
+        <strong>Tip:</strong>
+        Owner changes yahan se ho sakte hain, lekin primary owner role <code>Owner</code> hi rahega. Cashier ya manager users isi module se banenge.
+      </div>
+
+      <div class="page-actions">
+        <button class="secondary-button" type="button" (click)="startNewUser()">Clear Form</button>
+        <button class="primary-button" type="button" [disabled]="loading()" (click)="saveUser()">
+          <span class="material-symbols-outlined">save</span>
+          {{ selectedUser() ? 'Update User' : 'Create User' }}
+        </button>
+      </div>
+    </aside>
+  </div>
+</section>

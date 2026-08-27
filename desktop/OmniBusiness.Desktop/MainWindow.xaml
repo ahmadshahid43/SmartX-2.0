@@ -1,0 +1,203 @@
+<Window x:Class="OmniBusiness.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="OmniBusiness Desktop"
+        Width="1460"
+        Height="920"
+        MinWidth="1180"
+        MinHeight="760"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="18">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320" />
+            <ColumnDefinition Width="24" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource OutlineBrush}"
+                BorderThickness="1"
+                CornerRadius="30"
+                Padding="28">
+            <DockPanel LastChildFill="True">
+                <StackPanel DockPanel.Dock="Top">
+                    <Border Width="58"
+                            Height="58"
+                            Margin="0,0,0,18"
+                            Background="{StaticResource SurfaceDarkBrush}"
+                            CornerRadius="18">
+                        <TextBlock HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontSize="22"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   Text="OB" />
+                    </Border>
+
+                    <TextBlock FontSize="28"
+                               FontWeight="Bold"
+                               Text="OmniBusiness" />
+                    <TextBlock Margin="0,8,0,24"
+                               Style="{StaticResource MutedTextStyle}"
+                               Text="Offline-friendly desktop launcher for the local retail POS, sales history, inventory admin, and no-code product form builder." />
+
+                    <Border Style="{StaticResource CardStyle}"
+                            Background="{StaticResource SurfaceAltBrush}"
+                            Margin="0,0,0,18">
+                        <StackPanel>
+                            <TextBlock FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Text="Local Stack Status" />
+                            <TextBlock Margin="0,16,0,6"
+                                       Style="{StaticResource MutedTextStyle}"
+                                       Text="API" />
+                            <TextBlock x:Name="ApiStatusText"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Text="Checking..." />
+
+                            <TextBlock Margin="0,16,0,6"
+                                       Style="{StaticResource MutedTextStyle}"
+                                       Text="Web App" />
+                            <TextBlock x:Name="WebStatusText"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Text="Checking..." />
+
+                            <TextBlock Margin="0,16,0,6"
+                                       Style="{StaticResource MutedTextStyle}"
+                                       Text="FBR Mode" />
+                            <TextBlock x:Name="FbrModeText"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Text="Checking..." />
+                        </StackPanel>
+                    </Border>
+
+                    <Button Style="{StaticResource PrimaryNavButtonStyle}"
+                            Click="StartApi_Click"
+                            Content="Start API" />
+                    <Button Style="{StaticResource NavButtonStyle}"
+                            Click="StartWeb_Click"
+                            Content="Start Web App" />
+                    <Button Style="{StaticResource NavButtonStyle}"
+                            Click="RefreshStatus_Click"
+                            Content="Refresh Status" />
+                </StackPanel>
+
+                <Border DockPanel.Dock="Bottom"
+                        Margin="0,22,0,0"
+                        Background="{StaticResource SurfaceDarkBrush}"
+                        CornerRadius="24"
+                        Padding="20">
+                    <StackPanel>
+                        <TextBlock FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"
+                                   Text="Deployment fit" />
+                        <TextBlock Margin="0,10,0,0"
+                                   Foreground="#CBD5E1"
+                                   TextWrapping="Wrap"
+                                   Text="No SQL Server, no external internet dependency for day-to-day use, local JSON persistence, FBR-ready invoice queue, and browser-based admin flows." />
+                    </StackPanel>
+                </Border>
+            </DockPanel>
+        </Border>
+
+        <ScrollViewer Grid.Column="2"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <Border Style="{StaticResource CardStyle}"
+                        Margin="0,0,0,18">
+                    <StackPanel>
+                        <TextBlock FontSize="32"
+                                   FontWeight="Bold"
+                                   Text="Retail POS Launchpad" />
+                        <TextBlock Margin="0,10,0,0"
+                                   Style="{StaticResource MutedTextStyle}"
+                                   Text="Use the local web experience as the operator POS and admin workspace. These launch buttons open the exact modules your branch or back-office team needs." />
+                    </StackPanel>
+                </Border>
+
+                <Grid Margin="0,0,0,18">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="18" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource TitleTextStyle}" Text="Operator Actions" />
+                            <TextBlock Margin="0,10,0,20"
+                                       Style="{StaticResource MutedTextStyle}"
+                                       Text="Cashier-friendly entry points for live selling and receipt review." />
+
+                            <Button Style="{StaticResource PrimaryNavButtonStyle}"
+                                    Click="OpenPos_Click"
+                                    Content="Open POS Terminal" />
+                            <Button Style="{StaticResource NavButtonStyle}"
+                                    Click="OpenSales_Click"
+                                    Content="Open Sales History" />
+                            <Button Style="{StaticResource NavButtonStyle}"
+                                    Click="OpenSwagger_Click"
+                                    Content="Open Swagger / API Docs" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource TitleTextStyle}" Text="Admin Actions" />
+                            <TextBlock Margin="0,10,0,20"
+                                       Style="{StaticResource MutedTextStyle}"
+                                       Text="Back-office controls for inventory, catalog setup, and no-code custom fields." />
+
+                            <Button Style="{StaticResource PrimaryNavButtonStyle}"
+                                    Click="OpenInventory_Click"
+                                    Content="Open Inventory Admin" />
+                            <Button Style="{StaticResource NavButtonStyle}"
+                                    Click="OpenUsers_Click"
+                                    Content="Open Users &amp; Access" />
+                            <Button Style="{StaticResource NavButtonStyle}"
+                                    Click="OpenBuilder_Click"
+                                    Content="Open No-Code Builder" />
+                            <Button Style="{StaticResource NavButtonStyle}"
+                                    Click="OpenDashboard_Click"
+                                    Content="Open Dashboard" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Border Style="{StaticResource CardStyle}"
+                        Margin="0,0,0,18">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource TitleTextStyle}" Text="What This Desktop App Controls" />
+                        <TextBlock Margin="0,10,0,0"
+                                   Style="{StaticResource MutedTextStyle}"
+                                   Text="1. Starts the local API on http://localhost:5163. 2. Starts the Angular web app on http://localhost:4200. 3. Opens the POS, sales, inventory, and builder modules in the browser for full functionality." />
+                        <TextBlock Margin="0,14,0,0"
+                                   Style="{StaticResource MutedTextStyle}"
+                                   Text="FBR mode is read from the current API configuration. In this offline build the default is OfflineQueue, so invoices stay runnable locally and can be submitted later when credentials or internet access are available." />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource TitleTextStyle}" Text="Local URLs" />
+                        <TextBlock Margin="0,10,0,0" Text="POS: http://localhost:4200/pos" />
+                        <TextBlock Margin="0,8,0,0" Text="Sales: http://localhost:4200/sales" />
+                        <TextBlock Margin="0,8,0,0" Text="Users: http://localhost:4200/users" />
+                        <TextBlock Margin="0,8,0,0" Text="Inventory: http://localhost:4200/inventory" />
+                        <TextBlock Margin="0,8,0,0" Text="Builder: http://localhost:4200/form-builder" />
+                        <TextBlock Margin="0,8,0,0" Text="Swagger: http://localhost:5163/swagger" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

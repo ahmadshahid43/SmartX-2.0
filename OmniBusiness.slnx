@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/desktop/">
+    <Project Path="desktop/OmniBusiness.Desktop/OmniBusiness.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/OmniBusiness.Api/OmniBusiness.Api.csproj" />
+    <Project Path="src/OmniBusiness.Application/OmniBusiness.Application.csproj" />
+    <Project Path="src/OmniBusiness.Domain/OmniBusiness.Domain.csproj" />
+    <Project Path="src/OmniBusiness.Infrastructure/OmniBusiness.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OmniBusiness.Application.Tests/OmniBusiness.Application.Tests.csproj" />
+    <Project Path="tests/OmniBusiness.Domain.Tests/OmniBusiness.Domain.Tests.csproj" />
+    <Project Path="tests/OmniBusiness.Infrastructure.Tests/OmniBusiness.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,244 @@
+.print-host-root {
+  display: none;
+}
+
+.print-host-shell {
+  display: none;
+}
+
+body.printing-receipt .print-host-root,
+body.printing-receipt .print-host-shell {
+  display: block !important;
+}
+
+body.printing-receipt .app-root-shell {
+  display: none !important;
+}
+
+.print-host-shell {
+  background: #f3f4f6;
+  color: #111827;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.print-sheet {
+  background: #fff;
+  box-sizing: border-box;
+  color: #111827;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0 auto;
+  min-height: 297mm;
+  padding: 34px 38px;
+  width: 210mm;
+}
+
+.print-sheet.is-slip {
+  min-height: auto;
+  padding: 20px 18px;
+  width: 78mm;
+}
+
+.print-brand {
+  border-bottom: 2px solid #0f172a;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+}
+
+.print-brand-top {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.print-brand-platform {
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.print-brand h1 {
+  font-size: 28px;
+  margin: 0 0 6px;
+}
+
+.print-sheet.is-slip .print-brand h1 {
+  font-size: 18px;
+}
+
+.print-brand-badge {
+  background: #0f172a;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 8px 12px;
+  text-transform: uppercase;
+}
+
+.print-brand-subtitle {
+  color: #111827 !important;
+  font-size: 14px !important;
+  font-weight: 600;
+  margin-bottom: 4px !important;
+}
+
+.print-brand-license {
+  margin-top: 6px !important;
+}
+
+.print-brand p,
+.print-meta,
+.print-sku,
+.print-footnote {
+  color: #4b5563;
+  font-size: 13px;
+  margin: 0;
+}
+
+.print-sheet.is-slip .print-brand p,
+.print-sheet.is-slip .print-meta,
+.print-sheet.is-slip .print-sku,
+.print-sheet.is-slip .print-footnote {
+  font-size: 11px;
+}
+
+.print-sheet.is-slip .print-brand-top {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.print-sheet.is-slip .print-brand-badge {
+  align-self: flex-start;
+  font-size: 10px;
+  padding: 6px 10px;
+}
+
+.print-meta-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 16px 0 20px;
+}
+
+.print-sheet.is-slip .print-meta-grid {
+  grid-template-columns: 1fr;
+}
+
+.print-meta-block {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.print-meta-label {
+  color: #6b7280;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.print-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.print-table th,
+.print-table td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 6px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.print-table th {
+  color: #6b7280;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.print-table .center {
+  text-align: center;
+}
+
+.print-table .right {
+  text-align: right;
+}
+
+.print-totals {
+  margin-left: auto;
+  margin-top: 18px;
+  width: 320px;
+}
+
+.print-sheet.is-slip .print-totals {
+  width: 100%;
+}
+
+.print-totals-row {
+  align-items: center;
+  display: flex;
+  font-size: 14px;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.print-sheet.is-slip .print-totals-row {
+  font-size: 12px;
+}
+
+.print-totals-row.total {
+  border-top: 2px solid #111827;
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 6px;
+  padding-top: 10px;
+}
+
+.print-sheet.is-slip .print-totals-row.total {
+  font-size: 16px;
+}
+
+.print-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.print-tag {
+  background: #eff6ff;
+  border-radius: 999px;
+  color: #1d4ed8;
+  font-size: 11px;
+  padding: 6px 10px;
+}
+
+.print-footnote {
+  border-top: 1px dashed #cbd5e1;
+  margin-top: 16px;
+  padding-top: 14px;
+}
+
+@media print {
+  body,
+  .print-host-shell {
+    background: #fff !important;
+  }
+
+  .print-host-root,
+  .print-host-shell {
+    display: block !important;
+  }
+
+  .print-sheet {
+    margin: 0 auto;
+  }
+}

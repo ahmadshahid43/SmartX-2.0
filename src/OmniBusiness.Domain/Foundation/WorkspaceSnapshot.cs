@@ -1,0 +1,25 @@
+namespace OmniBusiness.Domain.Foundation;
+
+public sealed record WorkspaceSnapshot(
+    Tenant Tenant,
+    Company Company,
+    AppUser AdminUser,
+    PosCustomer ActiveCustomer,
+    IReadOnlyList<Branch> Branches,
+    IReadOnlyList<DailyBusinessFigure> DailyFigures,
+    IReadOnlyList<TrendPoint> SalesTrend,
+    IReadOnlyList<TopSellingItem> TopSelling,
+    IReadOnlyList<BranchPerformance> BranchPerformance,
+    IReadOnlyList<Product> Products,
+    IReadOnlyList<SaleRecord> RecentTransactions,
+    IReadOnlyList<CartLine> ActiveCart,
+    FormDefinition ProductCustomFields,
+    IReadOnlyList<AppUser>? Users = null,
+    IReadOnlyList<CustomerProfile>? Customers = null,
+    IReadOnlyList<StockAdjustmentRecord>? StockAdjustments = null,
+    IReadOnlyList<Vendor>? Vendors = null,
+    IReadOnlyList<PurchaseOrder>? PurchaseOrders = null,
+    IReadOnlyList<StockTransfer>? StockTransfers = null,
+    IReadOnlyList<CashShift>? CashShifts = null,
+    SubscriptionPlanSettings? SubscriptionSettings = null,
+    int NextSaleSequence = 8902);

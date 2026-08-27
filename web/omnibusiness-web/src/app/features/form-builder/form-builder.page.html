@@ -1,0 +1,154 @@
+<section class="page-stack">
+  <div class="page-header with-actions">
+    <div>
+      <h1>No-Code Product Form Builder</h1>
+      <p>Add and maintain product custom fields without editing source code.</p>
+    </div>
+
+    <div class="page-actions">
+      <button class="secondary-button compact-button" type="button" (click)="startNewField()">
+        <span class="material-symbols-outlined">post_add</span>
+        New Field
+      </button>
+      <button class="primary-button compact-button" type="button" [disabled]="loading()" (click)="saveField()">
+        <span class="material-symbols-outlined">save</span>
+        Save Field
+      </button>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="feedback-card error">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div class="feedback-card success">{{ successMessage() }}</div>
+  }
+
+  @if (formBuilder(); as data) {
+    <section class="form-builder-layout">
+      <aside class="surface-card builder-library">
+        <div class="section-header">
+          <h2>Field Library</h2>
+        </div>
+
+        @for (group of groupedLibrary(); track group[0]) {
+          <div class="library-group">
+            <div class="eyebrow">{{ group[0] }}</div>
+
+            @for (field of group[1]; track field.key) {
+              <button class="library-item library-button" type="button" (click)="useLibraryType(field.key)">
+                <span class="material-symbols-outlined">{{ field.icon }}</span>
+                <span>{{ field.label }}</span>
+              </button>
+            }
+          </div>
+        }
+      </aside>
+
+      <article class="surface-card builder-canvas">
+        <div class="section-header">
+          <div>
+            <h2>{{ data.title }}</h2>
+            <p>{{ data.description }}</p>
+          </div>
+          @if (loading()) {
+            <span class="status-chip neutral">Saving...</span>
+          }
+        </div>
+
+        <div class="canvas-surface">
+          @for (field of data.canvas; track field.fieldId) {
+            <button
+              class="canvas-field canvas-field-button"
+              type="button"
+              [class.is-selected]="field.fieldId === selectedFieldId()"
+              (click)="selectField(field)"
+            >
+              <div class="canvas-field-header">
+                <strong>{{ field.label }}</strong>
+                <div class="canvas-field-actions">
+                  <span class="status-chip neutral">{{ field.type }}</span>
+                </div>
+              </div>
+              <div class="input-preview">{{ field.placeholder || 'No placeholder set' }}</div>
+            </button>
+          }
+
+          <button class="drop-zone add-field-button" type="button" (click)="startNewField()">
+            Add another field
+          </button>
+        </div>
+      </article>
+
+      <aside class="surface-card builder-properties">
+        <div class="section-header">
+          <div>
+            <h2>{{ selectedField() ? 'Edit Field' : 'Create Field' }}</h2>
+            <p>{{ selectedField()?.fieldId || 'New field will get an automatic ID' }}</p>
+          </div>
+          @if (selectedField()) {
+            <button class="text-button danger-button" type="button" (click)="deleteSelectedField()">Delete</button>
+          }
+        </div>
+
+        <div class="property-group">
+          <label class="field">
+            <span>Field Label</span>
+            <input [(ngModel)]="fieldDraft.label" type="text" />
+          </label>
+
+          <label class="field">
+            <span>Field Type</span>
+            <select [(ngModel)]="fieldDraft.type">
+              <option value="ShortText">Short Text</option>
+              <option value="LongText">Long Text</option>
+              <option value="Number">Number</option>
+              <option value="Date">Date</option>
+              <option value="Dropdown">Dropdown</option>
+              <option value="Formula">Formula</option>
+              <option value="Lookup">Lookup</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Placeholder</span>
+            <input [(ngModel)]="fieldDraft.placeholder" type="text" />
+          </label>
+
+          <label class="field">
+            <span>Help Text</span>
+            <textarea [(ngModel)]="fieldDraft.helpText" rows="3"></textarea>
+          </label>
+
+          <label class="field">
+            <span>Default Value</span>
+            <input [(ngModel)]="fieldDraft.defaultValue" type="text" />
+          </label>
+
+          <div class="inline-fields">
+            <label class="field">
+              <span>Min Value</span>
+              <input [(ngModel)]="fieldDraft.minValue" type="number" />
+            </label>
+
+            <label class="field">
+              <span>Max Value</span>
+              <input [(ngModel)]="fieldDraft.maxValue" type="number" />
+            </label>
+          </div>
+
+          <label class="checkbox-inline">
+            <input [(ngModel)]="fieldDraft.required" type="checkbox" />
+            <span>Required field</span>
+          </label>
+
+          <label class="checkbox-inline">
+            <input [(ngModel)]="fieldDraft.isReadOnly" type="checkbox" />
+            <span>Read-only</span>
+          </label>
+        </div>
+      </aside>
+    </section>
+  }
+</section>
