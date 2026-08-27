@@ -89,6 +89,12 @@ same origin. That keeps the browser talking only to `/api/v1/...` and avoids put
 key in frontend code. The safest first public deploy is now `Render + LocalJson + persistent disk`;
 you can cut over to `Supabase/Postgres` later without changing the app surface.
 
+If you do **not** want a paid PaaS, use the prepared Oracle VM path instead:
+
+- `docker-compose.oracle-free.yml`
+- `.env.oracle.example`
+- `docs/go-live/oracle-free-vm.md`
+
 One-click starting point:
 
 - [Deploy SmartX to Render](https://render.com/deploy?repo=https://github.com/ahmadshahid43/SmartX-2.0)

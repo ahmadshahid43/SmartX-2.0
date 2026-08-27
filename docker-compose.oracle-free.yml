@@ -1,0 +1,27 @@
+services:
+  smartx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartx
+    restart: unless-stopped
+    ports:
+      - "80:10000"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      PORT: 10000
+      LOCALAPPDATA: /data
+      Persistence__Provider: ${PERSISTENCE_PROVIDER:-LocalJson}
+      Persistence__LocalDataPath: /data/foundation.local.json
+      Persistence__InitializeFromSeedOnFirstRun: "true"
+      Persistence__LockNonOwnerSeedUsers: "true"
+      Persistence__RequireOwnerPasswordOnSeed: "true"
+      Persistence__BootstrapOwnerPassword: ${SMARTX_OWNER_PASSWORD}
+      Persistence__BootstrapOwnerEmail: ${SMARTX_OWNER_EMAIL:-}
+      Persistence__BootstrapOwnerDisplayName: ${SMARTX_OWNER_NAME:-}
+      Persistence__ConnectionString: ${PERSISTENCE_CONNECTION_STRING:-}
+    volumes:
+      - smartx-data:/data
+
+volumes:
+  smartx-data:

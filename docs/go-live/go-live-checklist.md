@@ -3,6 +3,9 @@
 Ordered cutover steps. Steps 1–6 are the integration test the code hasn't yet had against a real
 Supabase project — do them in a staging project first, then repeat for production.
 
+If you are taking the cheaper VM-first route, do the Oracle VM deploy first with `LocalJson`, then
+repeat the Supabase steps later when you are ready for the database cutover.
+
 ## Pre-flight (build side)
 - [ ] `dotnet build OmniBusiness.slnx` is clean (with the new Npgsql/Dapper refs).
 - [ ] `dotnet test OmniBusiness.slnx` is green (Infrastructure + Application + Domain suites).
@@ -23,6 +26,7 @@ Supabase project — do them in a staging project first, then repeat for product
 - [ ] `Persistence__ConnectionString=` the app-role string, `SSL Mode=Require`, session-mode pooler
       (port 5432). (Secret — set in the platform secret manager.)
 - [ ] Attach a persistent volume; set `LOCALAPPDATA=/data` (or mount at the key path). 
+- [ ] Set `Persistence__BootstrapOwnerPassword=` to a brand-new owner password before first public boot.
 - [ ] Same-origin SPA: leave `Cors:AllowedOrigins` empty. (Split hosting only: set
       `Cors__AllowedOrigins__0`.)
 - [ ] Pin to a **single instance**.

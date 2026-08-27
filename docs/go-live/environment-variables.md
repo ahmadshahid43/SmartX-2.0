@@ -12,12 +12,15 @@ ASP.NET Core maps `__` (double underscore) in an env var to `:` in config, so
 | `Persistence__Provider` | `Supabase` | Selects `PostgresWorkspaceRepository`. (Already set in `appsettings.Production.json`; env is the override knob.) |
 | `Persistence__ConnectionString` | *(see below)* | **SECRET.** Npgsql connection string for the dedicated app role. |
 | `LOCALAPPDATA` | `/data` | Steers the DataProtection key ring onto the persistent volume. Mount the volume at this path. See [hosting-plan.md](hosting-plan.md). |
+| `Persistence__BootstrapOwnerPassword` | `YourStrongOwnerPassword` | **SECRET.** Required for safe first public seed. Replaces the old demo owner password on first boot. |
 
 ## Optional
 
 | Variable | When | Notes |
 | --- | --- | --- |
 | `Persistence__InitializeFromSeedOnFirstRun` | default `true` | Set `false` after the first successful seed if you want to hard-disable re-seeding. Harmless to leave `true` (only seeds when `tenants` is empty). |
+| `Persistence__BootstrapOwnerEmail` | public go-live | Override the seeded owner email on first boot. |
+| `Persistence__BootstrapOwnerDisplayName` | public go-live | Override the seeded owner display name on first boot. |
 | `Cors__AllowedOrigins__0` | **split hosting only** | e.g. `https://app.example.com`. Leave unset for the recommended same-origin deployment. Add `__1`, `__2`, … for more origins. |
 
 ## The connection string

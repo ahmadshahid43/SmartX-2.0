@@ -10,6 +10,13 @@ Fastest safe path right now:
 - let the app auto-lock non-owner demo users
 - cut over to `Supabase Postgres` after the hosted flow is verified
 
+Lowest-cost path right now:
+
+- use an Oracle Cloud **Always Free** VM
+- run `docker-compose.oracle-free.yml`
+- keep `LocalJson` first
+- move to `Supabase` later if needed
+
 ## The one idea to hold onto
 
 SmartX has **one codebase and one API image**. The store it talks to is chosen at runtime by a
@@ -31,9 +38,10 @@ controllers, and authentication are untouched.
 3. [schema-and-migrations.md](schema-and-migrations.md) — the Postgres schema and how to apply it.
 4. [hosting-plan.md](hosting-plan.md) — API container, same-origin SPA, desktop client.
 5. [environment-variables.md](environment-variables.md) — the full env-var checklist (secrets included).
-6. [risks.md](risks.md) — what could go wrong and the mitigations.
-7. [go-live-checklist.md](go-live-checklist.md) — the ordered cutover steps.
-8. [rollback-checklist.md](rollback-checklist.md) — how to back out safely.
+6. [oracle-free-vm.md](oracle-free-vm.md) — the cheapest practical live path for this stack.
+7. [risks.md](risks.md) — what could go wrong and the mitigations.
+8. [go-live-checklist.md](go-live-checklist.md) — the ordered cutover steps.
+9. [rollback-checklist.md](rollback-checklist.md) — how to back out safely.
 
 ## Scope guardrails (phase 1)
 

@@ -4,10 +4,21 @@
 
 | Component        | Where                                             | Notes                                    |
 | ---------------- | ------------------------------------------------- | ---------------------------------------- |
-| ASP.NET Core API | Managed container PaaS (Fly.io / Render / Railway) or a small Linux VM, **single instance** | Serves `/api/v1` **and** the SPA. Needs a persistent volume. |
+| ASP.NET Core API | Managed container PaaS (Render, Railway, etc.) or a small Linux VM, **single instance** | Serves `/api/v1` **and** the SPA. Needs persistent writable storage. |
 | Angular SPA      | Served by the API container at the same origin    | Built output copied into the API's `wwwroot`. |
 | Supabase Postgres| Supabase cloud, region near Pakistan (Mumbai/Singapore) | Reached via a dedicated app role, not `service_role`. |
 | WPF desktop      | Office laptop, installed separately               | Unchanged; offline `LocalJson`.          |
+
+## Lowest-cost practical option
+
+For this stack, the cheapest realistic public deployment is:
+
+1. Oracle Cloud Always Free VM
+2. Docker + `docker-compose.oracle-free.yml`
+3. `Persistence__Provider=LocalJson`
+4. optional later cutover to `Supabase`
+
+This avoids paid persistent-disk requirements on platforms like Render.
 
 ## Why single instance
 
