@@ -1,6 +1,6 @@
-# OmniBusiness ERP + POS Starter
+# SmartX ERP + POS Starter
 
-OmniBusiness is a local-first ERP + POS starter built from the supplied dashboard, inventory, POS terminal, and visual form-builder references. This repository is intentionally designed to run on a managed office laptop without requiring SQL Server, Windows services, or database administration.
+SmartX is a local-first ERP + POS starter built from the supplied dashboard, inventory, POS terminal, and visual form-builder references. This repository is intentionally designed to run on a managed office laptop without requiring SQL Server, Windows services, or database administration.
 
 ## What is included
 
@@ -8,6 +8,7 @@ OmniBusiness is a local-first ERP + POS starter built from the supplied dashboar
 - Angular 22 web portal styled from the supplied visual references
 - WPF desktop shell for branch-facing operations
 - Local JSON persistence provider with a clean repository seam for a future SQL-backed implementation
+- Supabase/Postgres provider for cloud go-live without changing the offline laptop mode
 
 ## Visual reference sources
 
@@ -80,6 +81,43 @@ From the repository root, you can also use the included batch files:
 - `run-web.cmd` - starts the Angular frontend using `npm.cmd`
 - `run-desktop.cmd` - starts the WPF shell
 - `run-demo.cmd` - opens API and web app in separate windows
+
+## Deploy as one cloud service
+
+For the recommended live setup, the built Angular app is served by the ASP.NET Core API from the
+same origin. That keeps the browser talking only to `/api/v1/...` and avoids putting any Supabase
+key in frontend code.
+
+Build the container image:
+
+```powershell
+docker build -t smartx:latest .
+```
+
+Run it locally in production mode with the offline provider:
+
+```powershell
+docker run --rm -p 8080:8080 -v smartx-data:/data -e Persistence__Provider=LocalJson smartx:latest
+```
+
+Run it for cloud mode with Supabase/Postgres:
+
+```powershell
+docker run --rm -p 8080:8080 `
+  -v smartx-data:/data `
+  -e Persistence__Provider=Supabase `
+  -e Persistence__ConnectionString="Host=<region>.pooler.supabase.com;Port=5432;Database=postgres;Username=smartx_app;Password=<secret>;SSL Mode=Require;Pooling=true;Maximum Pool Size=10" `
+  smartx:latest
+```
+
+After startup:
+
+- `/` opens the SmartX web app when `wwwroot` is present in the container image
+- `/swagger` opens the API explorer
+- `/health` and `/ready` expose health checks
+
+For the full go-live checklist, environment variables, rollback plan, and Supabase migration notes,
+see `docs/go-live/`.
 
 ## Default login
 

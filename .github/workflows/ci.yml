@@ -57,3 +57,13 @@ jobs:
         shell: pwsh
         working-directory: web/omnibusiness-web
         run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build production container
+        run: docker build -t smartx-ci .
