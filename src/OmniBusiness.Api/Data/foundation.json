@@ -2,14 +2,14 @@
   "tenant": {
     "id": "11111111-1111-1111-1111-111111111111",
     "slug": "smartx-workspace",
-    "name": "SmartX Workspace",
+    "name": "SmartX Grocery Demo",
     "industryTemplate": "Configurable ERP + POS",
     "subscriptionPlan": "Premium"
   },
   "company": {
     "id": "22222222-2222-2222-2222-222222222222",
     "tenantId": "11111111-1111-1111-1111-111111111111",
-    "name": "SmartX Workspace",
+    "name": "SmartX Grocery Demo - Lahore",
     "baseCurrency": "PKR",
     "timeZone": "Asia/Karachi",
     "country": "Pakistan"
@@ -58,19 +58,731 @@
       "isPrimary": true
     }
   ],
-  "dailyFigures": [],
-  "salesTrend": [],
-  "topSelling": [],
-  "branchPerformance": [],
-  "products": [],
-  "recentTransactions": [],
+  "dailyFigures": [
+    {
+      "date": "2026-09-01",
+      "purchases": 4800,
+      "grossProfit": 788,
+      "sales": 5632
+    },
+    {
+      "date": "2026-08-31",
+      "purchases": 3500,
+      "grossProfit": 700,
+      "sales": 4200
+    }
+  ],
+  "salesTrend": [
+    {
+      "value": 4200,
+      "label": "Mon"
+    },
+    {
+      "value": 5632,
+      "label": "Tue"
+    },
+    {
+      "value": 4850,
+      "label": "Wed"
+    },
+    {
+      "value": 6100,
+      "label": "Thu"
+    },
+    {
+      "value": 5300,
+      "label": "Fri"
+    }
+  ],
+  "topSelling": [
+    {
+      "units": 28,
+      "name": "Olpers UHT Full Cream Milk 1L",
+      "revenue": 10500
+    },
+    {
+      "units": 19,
+      "name": "Local Desi Sugar 2kg",
+      "revenue": 5890
+    },
+    {
+      "units": 42,
+      "name": "Lays Classic Salted 50g",
+      "revenue": 3276
+    }
+  ],
+  "branchPerformance": [
+    {
+      "percentage": 100,
+      "branchName": "Main Branch"
+    }
+  ],
+  "products": [
+    {
+      "id": "10000000-0000-0000-0000-000000000001",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "GRC-MLK-001",
+      "name": "Olpers UHT Full Cream Milk 1L",
+      "category": "Dairy & Eggs",
+      "unitPrice": 375,
+      "inHand": 48,
+      "reserved": 2,
+      "warehouse": "Main Warehouse",
+      "status": "In Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": false,
+      "visualCode": "OLP",
+      "reorderLevel": 12,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000002",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "GRC-TEA-430",
+      "name": "Tapal Danedar Tea 430g",
+      "category": "Tea & Coffee",
+      "unitPrice": 945,
+      "inHand": 20,
+      "reserved": 1,
+      "warehouse": "Main Warehouse",
+      "status": "In Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": false,
+      "visualCode": "TAP",
+      "reorderLevel": 8,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000003",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "GRC-OIL-001",
+      "name": "Kausar Cooking Oil 1L",
+      "category": "Cooking Oil & Ghee",
+      "unitPrice": 550,
+      "inHand": 35,
+      "reserved": 0,
+      "warehouse": "Main Warehouse",
+      "status": "In Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": false,
+      "visualCode": "KAU",
+      "reorderLevel": 10,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000004",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "GRC-RICE-001",
+      "name": "Guard Supreme Basmati Rice 1kg",
+      "category": "Rice & Flour",
+      "unitPrice": 520,
+      "inHand": 24,
+      "reserved": 1,
+      "warehouse": "Main Warehouse",
+      "status": "In Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": false,
+      "visualCode": "GRD",
+      "reorderLevel": 8,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000005",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "GRC-SUG-002",
+      "name": "Local Desi Sugar 2kg",
+      "category": "Staples",
+      "unitPrice": 310,
+      "inHand": 60,
+      "reserved": 4,
+      "warehouse": "Main Warehouse",
+      "status": "In Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": false,
+      "visualCode": "SUG",
+      "reorderLevel": 15,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000006",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "GRC-WTR-005",
+      "name": "Nestle Pure Life Water 5L",
+      "category": "Beverages",
+      "unitPrice": 315,
+      "inHand": 14,
+      "reserved": 1,
+      "warehouse": "Main Warehouse",
+      "status": "In Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": false,
+      "visualCode": "NPL",
+      "reorderLevel": 10,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000007",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "GRC-CHP-001",
+      "name": "Lays Classic Salted 50g",
+      "category": "Snacks",
+      "unitPrice": 78,
+      "inHand": 85,
+      "reserved": 5,
+      "warehouse": "Main Warehouse",
+      "status": "In Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": false,
+      "visualCode": "LAY",
+      "reorderLevel": 20,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000008",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "GRC-KTC-800",
+      "name": "National Tomato Ketchup 800g",
+      "category": "Sauces & Spices",
+      "unitPrice": 345,
+      "inHand": 7,
+      "reserved": 0,
+      "warehouse": "Main Warehouse",
+      "status": "Low Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": true,
+      "visualCode": "NAT",
+      "reorderLevel": 8,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000009",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "GRC-TIS-550",
+      "name": "Rose Petal Smart Pack 550 Sheets",
+      "category": "Home Care",
+      "unitPrice": 415,
+      "inHand": 11,
+      "reserved": 1,
+      "warehouse": "Main Warehouse",
+      "status": "Low Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": true,
+      "visualCode": "RPT",
+      "reorderLevel": 10,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000010",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "GRC-EGG-030",
+      "name": "Farm Fresh Classic Eggs 30 Pack",
+      "category": "Dairy & Eggs",
+      "unitPrice": 695,
+      "inHand": 9,
+      "reserved": 0,
+      "warehouse": "Main Warehouse",
+      "status": "Low Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": true,
+      "visualCode": "EGG",
+      "reorderLevel": 12,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000011",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "GRC-DAL-500",
+      "name": "Daal Moong Wash 500g",
+      "category": "Pulses & Spices",
+      "unitPrice": 220,
+      "inHand": 32,
+      "reserved": 2,
+      "warehouse": "Main Warehouse",
+      "status": "In Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": false,
+      "visualCode": "DAL",
+      "reorderLevel": 10,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000012",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "GRC-FRZ-001",
+      "name": "K&N's Tender Pops 780g",
+      "category": "Frozen Food",
+      "unitPrice": 1260,
+      "inHand": 6,
+      "reserved": 0,
+      "warehouse": "Main Warehouse",
+      "status": "Low Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": true,
+      "visualCode": "KNN",
+      "reorderLevel": 8,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000013",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "FRS-POT-001",
+      "name": "Fresh Potato 1kg",
+      "category": "Fresh Produce",
+      "unitPrice": 59,
+      "inHand": 42,
+      "reserved": 0,
+      "warehouse": "Main Warehouse",
+      "status": "In Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": false,
+      "visualCode": "POT",
+      "reorderLevel": 15,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000014",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "FRS-TOM-001",
+      "name": "Fresh Tomato 1kg",
+      "category": "Fresh Produce",
+      "unitPrice": 419,
+      "inHand": 8,
+      "reserved": 0,
+      "warehouse": "Main Warehouse",
+      "status": "Low Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": true,
+      "visualCode": "TOM",
+      "reorderLevel": 10,
+      "isArchived": false
+    },
+    {
+      "id": "10000000-0000-0000-0000-000000000015",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "sku": "GRC-SOA-004",
+      "name": "Sufi Laundry Soap 4 Pack",
+      "category": "Home Care",
+      "unitPrice": 545,
+      "inHand": 18,
+      "reserved": 1,
+      "warehouse": "Main Warehouse",
+      "status": "In Stock",
+      "isFavorite": false,
+      "isQuickSale": true,
+      "isLowStock": false,
+      "visualCode": "SUF",
+      "reorderLevel": 10,
+      "isArchived": false
+    }
+  ],
+  "recentTransactions": [
+    {
+      "id": "8e8d3c7d-2922-46c3-8ece-902e9b6ebff6",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "referenceNo": "INV-0001",
+      "customerName": "Ayesha Khan",
+      "amount": 2223.0,
+      "grossProfit": 270.0,
+      "status": "Completed",
+      "occurredAt": "2026-09-01T23:48:26.8640153+05:00",
+      "itemCount": 6,
+      "discount": 50,
+      "tax": 344,
+      "paymentMethod": "Cash",
+      "cashierName": "Ahmad",
+      "lines": [
+        {
+          "productId": "10000000-0000-0000-0000-000000000001",
+          "sku": "GRC-MLK-001",
+          "name": "Olpers UHT Full Cream Milk 1L",
+          "quantity": 2,
+          "unitPrice": 375,
+          "lineTotal": 750
+        },
+        {
+          "productId": "10000000-0000-0000-0000-000000000002",
+          "sku": "GRC-TEA-430",
+          "name": "Tapal Danedar Tea 430g",
+          "quantity": 1,
+          "unitPrice": 945,
+          "lineTotal": 945
+        },
+        {
+          "productId": "10000000-0000-0000-0000-000000000007",
+          "sku": "GRC-CHP-001",
+          "name": "Lays Classic Salted 50g",
+          "quantity": 3,
+          "unitPrice": 78,
+          "lineTotal": 234
+        }
+      ],
+      "receivedAmount": 2223.0,
+      "changeAmount": 0,
+      "fbrStatus": "Reported",
+      "fbrInvoiceNumber": "FBR-INV-0001",
+      "paidAmount": 2223.0,
+      "balanceAmount": 0,
+      "paymentStatus": "Paid",
+      "payments": [
+        {
+          "method": "Cash",
+          "amount": 2223.0,
+          "referenceNo": null
+        }
+      ],
+      "refundedAmount": 0,
+      "refundedAt": null,
+      "refundedBy": null,
+      "refundReason": null,
+      "inventoryReturned": false
+    },
+    {
+      "id": "4b8464c2-b792-4323-b525-58dda315c3bd",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "referenceNo": "INV-0002",
+      "customerName": "Usman Ali",
+      "amount": 2614.0,
+      "grossProfit": 309.0,
+      "status": "Completed",
+      "occurredAt": "2026-08-31T23:48:26.8640153+05:00",
+      "itemCount": 5,
+      "discount": 0,
+      "tax": 404,
+      "paymentMethod": "Card",
+      "cashierName": "Ahmad",
+      "lines": [
+        {
+          "productId": "10000000-0000-0000-0000-000000000004",
+          "sku": "GRC-RICE-001",
+          "name": "Guard Supreme Basmati Rice 1kg",
+          "quantity": 2,
+          "unitPrice": 520,
+          "lineTotal": 1040
+        },
+        {
+          "productId": "10000000-0000-0000-0000-000000000005",
+          "sku": "GRC-SUG-002",
+          "name": "Local Desi Sugar 2kg",
+          "quantity": 2,
+          "unitPrice": 310,
+          "lineTotal": 620
+        },
+        {
+          "productId": "10000000-0000-0000-0000-000000000003",
+          "sku": "GRC-OIL-001",
+          "name": "Kausar Cooking Oil 1L",
+          "quantity": 1,
+          "unitPrice": 550,
+          "lineTotal": 550
+        }
+      ],
+      "receivedAmount": 2614.0,
+      "changeAmount": 0,
+      "fbrStatus": "Reported",
+      "fbrInvoiceNumber": "FBR-INV-0002",
+      "paidAmount": 2614.0,
+      "balanceAmount": 0,
+      "paymentStatus": "Paid",
+      "payments": [
+        {
+          "method": "Card",
+          "amount": 2614.0,
+          "referenceNo": null
+        }
+      ],
+      "refundedAmount": 0,
+      "refundedAt": null,
+      "refundedBy": null,
+      "refundReason": null,
+      "inventoryReturned": false
+    },
+    {
+      "id": "603e6d3a-8680-4b24-8294-4293b712d2bd",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "referenceNo": "INV-0003",
+      "customerName": "Sara Ahmed",
+      "amount": 3114.0,
+      "grossProfit": 390.0,
+      "status": "Completed",
+      "occurredAt": "2026-08-30T23:48:26.8640153+05:00",
+      "itemCount": 4,
+      "discount": 75,
+      "tax": 404,
+      "paymentMethod": "Digital Wallet",
+      "cashierName": "Ahmad",
+      "lines": [
+        {
+          "productId": "10000000-0000-0000-0000-000000000010",
+          "sku": "GRC-EGG-030",
+          "name": "Farm Fresh Classic Eggs 30 Pack",
+          "quantity": 1,
+          "unitPrice": 695,
+          "lineTotal": 695
+        },
+        {
+          "productId": "10000000-0000-0000-0000-000000000012",
+          "sku": "GRC-FRZ-001",
+          "name": "K&N's Tender Pops 780g",
+          "quantity": 1,
+          "unitPrice": 1260,
+          "lineTotal": 1260
+        },
+        {
+          "productId": "10000000-0000-0000-0000-000000000009",
+          "sku": "GRC-TIS-550",
+          "name": "Rose Petal Smart Pack 550 Sheets",
+          "quantity": 2,
+          "unitPrice": 415,
+          "lineTotal": 830
+        }
+      ],
+      "receivedAmount": 3114.0,
+      "changeAmount": 0,
+      "fbrStatus": "QueuedOffline",
+      "fbrInvoiceNumber": null,
+      "paidAmount": 3114.0,
+      "balanceAmount": 0,
+      "paymentStatus": "Paid",
+      "payments": [
+        {
+          "method": "Digital Wallet",
+          "amount": 3114.0,
+          "referenceNo": null
+        }
+      ],
+      "refundedAmount": 0,
+      "refundedAt": null,
+      "refundedBy": null,
+      "refundReason": null,
+      "inventoryReturned": false
+    },
+    {
+      "id": "0d12bd78-6795-4887-b0ac-ca95d0d91121",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "referenceNo": "INV-0004",
+      "customerName": "Walk-in Customer",
+      "amount": 1670.0,
+      "grossProfit": 212.0,
+      "status": "Completed",
+      "occurredAt": "2026-08-29T23:48:26.8640153+05:00",
+      "itemCount": 8,
+      "discount": 0,
+      "tax": 156,
+      "paymentMethod": "Cash",
+      "cashierName": "Ahmad",
+      "lines": [
+        {
+          "productId": "10000000-0000-0000-0000-000000000013",
+          "sku": "FRS-POT-001",
+          "name": "Fresh Potato 1kg",
+          "quantity": 4,
+          "unitPrice": 59,
+          "lineTotal": 236
+        },
+        {
+          "productId": "10000000-0000-0000-0000-000000000014",
+          "sku": "FRS-TOM-001",
+          "name": "Fresh Tomato 1kg",
+          "quantity": 2,
+          "unitPrice": 419,
+          "lineTotal": 838
+        },
+        {
+          "productId": "10000000-0000-0000-0000-000000000011",
+          "sku": "GRC-DAL-500",
+          "name": "Daal Moong Wash 500g",
+          "quantity": 2,
+          "unitPrice": 220,
+          "lineTotal": 440
+        }
+      ],
+      "receivedAmount": 1670.0,
+      "changeAmount": 0,
+      "fbrStatus": "Reported",
+      "fbrInvoiceNumber": "FBR-INV-0004",
+      "paidAmount": 1670.0,
+      "balanceAmount": 0,
+      "paymentStatus": "Paid",
+      "payments": [
+        {
+          "method": "Cash",
+          "amount": 1670.0,
+          "referenceNo": null
+        }
+      ],
+      "refundedAmount": 0,
+      "refundedAt": null,
+      "refundedBy": null,
+      "refundReason": null,
+      "inventoryReturned": false
+    }
+  ],
   "activeCart": [],
-  "customers": [],
-  "stockAdjustments": [],
-  "vendors": [],
-  "purchaseOrders": [],
-  "stockTransfers": [],
-  "cashShifts": [],
+  "customers": [
+    {
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "isWalkIn": true,
+      "giftCardBalance": 0,
+      "marketingOptIn": false,
+      "loyaltyPoints": 0,
+      "lastVisitAt": "2026-09-01T23:48:26.8640153+05:00",
+      "phoneNumber": null,
+      "name": "Walk-in Customer",
+      "email": null,
+      "id": "20000000-0000-0000-0000-000000000001",
+      "avatarLetter": "W",
+      "storeCreditBalance": 0,
+      "loyaltyTier": "Standard",
+      "pricingTier": "Retail Pricing"
+    },
+    {
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "isWalkIn": false,
+      "giftCardBalance": 0,
+      "marketingOptIn": true,
+      "loyaltyPoints": 240,
+      "lastVisitAt": "2026-09-01T23:48:26.8640153+05:00",
+      "phoneNumber": "03001234567",
+      "name": "Ayesha Khan",
+      "email": "ayesha.demo@example.com",
+      "id": "20000000-0000-0000-0000-000000000002",
+      "avatarLetter": "A",
+      "storeCreditBalance": 150,
+      "loyaltyTier": "Gold",
+      "pricingTier": "Retail Pricing"
+    },
+    {
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "isWalkIn": false,
+      "giftCardBalance": 500,
+      "marketingOptIn": true,
+      "loyaltyPoints": 80,
+      "lastVisitAt": "2026-08-31T23:48:26.8640153+05:00",
+      "phoneNumber": "03011234567",
+      "name": "Usman Ali",
+      "email": "usman.demo@example.com",
+      "id": "20000000-0000-0000-0000-000000000003",
+      "avatarLetter": "U",
+      "storeCreditBalance": 0,
+      "loyaltyTier": "Standard",
+      "pricingTier": "Retail Pricing"
+    },
+    {
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "isWalkIn": false,
+      "giftCardBalance": 0,
+      "marketingOptIn": false,
+      "loyaltyPoints": 120,
+      "lastVisitAt": "2026-08-30T23:48:26.8640153+05:00",
+      "phoneNumber": "03021234567",
+      "name": "Sara Ahmed",
+      "email": "sara.demo@example.com",
+      "id": "20000000-0000-0000-0000-000000000004",
+      "avatarLetter": "S",
+      "storeCreditBalance": 0,
+      "loyaltyTier": "Silver",
+      "pricingTier": "Wholesale Pricing"
+    }
+  ],
+  "stockAdjustments": [
+    {
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "performedBy": "Admin",
+      "quantityDelta": -3,
+      "occurredAt": "2026-08-31T23:48:26.8640153+05:00",
+      "id": "fd0f8731-35ee-4428-a047-3dbb1d3bfa7e",
+      "productId": "10000000-0000-0000-0000-000000000014",
+      "productName": "Fresh Tomato 1kg",
+      "reason": "Fresh produce spoilage"
+    }
+  ],
+  "vendors": [
+    {
+      "id": "30000000-0000-0000-0000-000000000001",
+      "contactPerson": "Bilal Raza",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "paymentTerms": "Net 15",
+      "status": "Active",
+      "city": "Lahore",
+      "leadTimeLabel": "2 days",
+      "phoneNumber": "042-111-637-853",
+      "name": "Nestle Pakistan Distribution"
+    },
+    {
+      "id": "30000000-0000-0000-0000-000000000002",
+      "contactPerson": "Saad Iqbal",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "paymentTerms": "Cash on delivery",
+      "status": "Active",
+      "city": "Lahore",
+      "leadTimeLabel": "Same week",
+      "phoneNumber": "042-111-786-786",
+      "name": "Metro Cash & Carry Wholesale"
+    }
+  ],
+  "purchaseOrders": [
+    {
+      "id": "0c859c0f-8285-4e9d-b3af-d69cee4732a2",
+      "receivedUnits": 0,
+      "expectedAt": "2026-09-03T23:48:26.8640153+05:00",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "lineCount": 12,
+      "totalAmount": 48750,
+      "status": "Open",
+      "createdAt": "2026-08-31T23:48:26.8640153+05:00",
+      "purchaseOrderNo": "PO-GRC-1001",
+      "vendorId": "30000000-0000-0000-0000-000000000001",
+      "vendorName": "Nestle Pakistan Distribution",
+      "orderedUnits": 180
+    }
+  ],
+  "stockTransfers": [
+    {
+      "id": "099c32e3-c20c-4b6e-9373-01adf5ae191a",
+      "requestedBy": "Admin",
+      "toBranchName": "Gulberg Outlet",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "fromBranchName": "Main Branch",
+      "notes": "Milk and staples replenishment",
+      "units": 24,
+      "createdAt": "2026-09-01T23:48:26.8640153+05:00",
+      "transferNo": "ST-GRC-1001",
+      "status": "In Transit",
+      "expectedAt": "2026-09-02T23:48:26.8640153+05:00"
+    }
+  ],
+  "cashShifts": [
+    {
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "registerName": "Counter 01",
+      "refunds": 0,
+      "closedAt": null,
+      "cashierName": "Ahmad",
+      "status": "Open",
+      "paidOuts": 0,
+      "userId": "16d3cb0e-15be-4114-a7be-beb22a3d96a6",
+      "countedCash": 7400,
+      "id": "83a44d16-3fb2-45e7-a4e1-ce229dfa707f",
+      "cashSales": 2400,
+      "expectedCash": 7400,
+      "openedAt": "2026-09-01T18:48:26.8640153+05:00",
+      "openingFloat": 5000
+    }
+  ],
   "subscriptionSettings": {
     "planCode": "premium",
     "planName": "Premium",
@@ -80,59 +792,242 @@
     "includedBranches": 10,
     "allowCustomModuleOverrides": true,
     "moduleEntitlements": [
-      { "moduleKey": "dashboard-analytics", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "pos-checkout", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "counter-orders", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "book-orders", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "hold-and-resume", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "customer-profiles", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "split-payments", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "late-payments", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "service-cards", "enabled": true, "addOnMonthlyPrice": 5021 },
-      { "moduleKey": "returns-refunds", "enabled": true, "addOnMonthlyPrice": 4000 },
-      { "moduleKey": "inventory-core", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "trade-in", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "stock-take", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "stock-transfer-desk", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "grn-receiving", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "inward-register", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "gate-pass-control", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "warehouse-reports", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "barcode-suite", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "supplier-management", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "purchase-orders", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "expense-management", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "ledger-accounting", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "profit-loss", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "fbr-compliance", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "pos-configuration", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "order-listing", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "booking-analytics", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "reporting-suite", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "tax-and-refund-reporting", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "expiry-and-usage-reporting", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "social-publishing", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "customer-notifications", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "employee-management", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "role-permissions", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "no-code-builder", "enabled": true, "addOnMonthlyPrice": 0 },
-      { "moduleKey": "plan-and-module-control", "enabled": true, "addOnMonthlyPrice": 0 }
+      {
+        "moduleKey": "dashboard-analytics",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "pos-checkout",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "counter-orders",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "book-orders",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "hold-and-resume",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "customer-profiles",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "split-payments",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "late-payments",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "service-cards",
+        "enabled": true,
+        "addOnMonthlyPrice": 5021
+      },
+      {
+        "moduleKey": "returns-refunds",
+        "enabled": true,
+        "addOnMonthlyPrice": 4000
+      },
+      {
+        "moduleKey": "inventory-core",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "trade-in",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "stock-take",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "stock-transfer-desk",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "grn-receiving",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "inward-register",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "gate-pass-control",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "warehouse-reports",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "barcode-suite",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "supplier-management",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "purchase-orders",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "expense-management",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "ledger-accounting",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "profit-loss",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "fbr-compliance",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "pos-configuration",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "order-listing",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "booking-analytics",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "reporting-suite",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "tax-and-refund-reporting",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "expiry-and-usage-reporting",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "social-publishing",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "customer-notifications",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "employee-management",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "role-permissions",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "no-code-builder",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      },
+      {
+        "moduleKey": "plan-and-module-control",
+        "enabled": true,
+        "addOnMonthlyPrice": 0
+      }
     ]
   },
-  "nextSaleSequence": 1,
+  "nextSaleSequence": 9001,
   "productCustomFields": {
     "id": "product-custom-fields",
     "title": "Product Custom Fields",
     "description": "Configure additional data points collected for all inventory items.",
     "selectedFieldId": "",
     "library": [
-      { "key": "short-text", "label": "Short Text", "group": "Basic", "icon": "text_fields" },
-      { "key": "long-text", "label": "Long Text", "group": "Basic", "icon": "notes" },
-      { "key": "number", "label": "Number", "group": "Basic", "icon": "tag" },
-      { "key": "date", "label": "Date", "group": "Basic", "icon": "calendar_today" },
-      { "key": "dropdown", "label": "Dropdown", "group": "Basic", "icon": "arrow_drop_down_circle" },
-      { "key": "formula", "label": "Formula", "group": "Advanced", "icon": "functions" },
-      { "key": "lookup", "label": "Lookup", "group": "Advanced", "icon": "manage_search" }
+      {
+        "key": "short-text",
+        "label": "Short Text",
+        "group": "Basic",
+        "icon": "text_fields"
+      },
+      {
+        "key": "long-text",
+        "label": "Long Text",
+        "group": "Basic",
+        "icon": "notes"
+      },
+      {
+        "key": "number",
+        "label": "Number",
+        "group": "Basic",
+        "icon": "tag"
+      },
+      {
+        "key": "date",
+        "label": "Date",
+        "group": "Basic",
+        "icon": "calendar_today"
+      },
+      {
+        "key": "dropdown",
+        "label": "Dropdown",
+        "group": "Basic",
+        "icon": "arrow_drop_down_circle"
+      },
+      {
+        "key": "formula",
+        "label": "Formula",
+        "group": "Advanced",
+        "icon": "functions"
+      },
+      {
+        "key": "lookup",
+        "label": "Lookup",
+        "group": "Advanced",
+        "icon": "manage_search"
+      }
     ],
     "canvas": []
   }
