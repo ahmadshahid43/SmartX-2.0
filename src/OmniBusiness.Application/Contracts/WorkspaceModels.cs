@@ -132,13 +132,42 @@ public sealed record StockTransferSummaryDto(
     DateTimeOffset CreatedAt,
     DateTimeOffset? ExpectedAt,
     int Units,
-    string RequestedBy);
+    string RequestedBy,
+    string Notes);
+
+public sealed record GoodsReceiptSummaryDto(
+    Guid GoodsReceiptId,
+    string ReceiptNo,
+    string PurchaseOrderNo,
+    string VendorName,
+    string WarehouseName,
+    string Status,
+    DateTimeOffset ReceivedAt,
+    string ReceivedBy,
+    int LineCount,
+    int ReceivedUnits,
+    int VarianceUnits,
+    string Notes);
 
 public sealed record OperationsHubDto(
     CashShiftMetricsDto Cash,
     ComplianceMetricsDto Compliance,
     IReadOnlyList<CashShiftSummaryDto> CashShifts,
     IReadOnlyList<PosModuleGroupDto> ModuleGroups);
+
+public sealed record WarehouseHubDto(
+    WarehouseMetricsDto Metrics,
+    IReadOnlyList<string> Branches,
+    IReadOnlyList<string> Warehouses,
+    IReadOnlyList<StockTransferSummaryDto> StockTransfers,
+    IReadOnlyList<GoodsReceiptSummaryDto> GoodsReceipts,
+    IReadOnlyList<GatePassSummaryDto> GatePasses);
+
+public sealed record WarehouseMetricsDto(
+    int ActiveTransfers,
+    int PendingReceipts,
+    int OpenGatePasses,
+    int UnitsInMotion);
 
 public sealed record CashShiftMetricsDto(
     int OpenRegisters,
@@ -165,6 +194,19 @@ public sealed record CashShiftSummaryDto(
     decimal CountedCash,
     decimal Variance,
     string Status);
+
+public sealed record GatePassSummaryDto(
+    Guid GatePassId,
+    string GatePassNo,
+    string MovementType,
+    string WarehouseName,
+    string DestinationName,
+    string ReferenceNo,
+    string Status,
+    DateTimeOffset IssuedAt,
+    string IssuedBy,
+    int Units,
+    string Notes);
 
 public sealed record PosModuleGroupDto(
     string Title,
@@ -228,6 +270,33 @@ public sealed record DashboardAlertDto(
     int Count,
     string ActionLabel);
 
+public sealed record ReportsHubDto(
+    DateTimeOffset GeneratedAt,
+    IReadOnlyList<ReportSectionDto> Sections,
+    IReadOnlyList<ReportTableRowDto> SalesByItem,
+    IReadOnlyList<ReportTableRowDto> SalesByCategory,
+    IReadOnlyList<ReportTableRowDto> PaymentMethods);
+
+public sealed record ReportSectionDto(
+    string Key,
+    string Title,
+    string Description,
+    string Icon,
+    IReadOnlyList<ReportMetricDto> Metrics);
+
+public sealed record ReportMetricDto(
+    string Key,
+    string Label,
+    decimal Value,
+    string Format,
+    string Status = "ready");
+
+public sealed record ReportTableRowDto(
+    string Label,
+    decimal Amount,
+    int Count,
+    string SecondaryLabel = "");
+
 public sealed record TrendPointDto(
     string Label,
     decimal Value);
@@ -254,7 +323,14 @@ public sealed record InventoryOverviewDto(
     IReadOnlyList<string> Warehouses,
     IReadOnlyList<string> Categories,
     IReadOnlyList<string> Statuses,
-    IReadOnlyList<InventoryItemDto> Items);
+    IReadOnlyList<InventoryItemDto> Items,
+    InventoryMetricsDto Metrics,
+    IReadOnlyList<InventoryLowStockItemDto> LowStockItems,
+    IReadOnlyList<InventoryWarehouseSummaryDto> WarehouseSummaries,
+    IReadOnlyList<InventoryCategorySummaryDto> CategorySummaries,
+    IReadOnlyList<InventoryUsageInsightDto> UsageInsights,
+    IReadOnlyList<InventoryBarcodeQueueItemDto> BarcodeQueue,
+    IReadOnlyList<StockTakeSummaryDto> RecentStockTakes);
 
 public sealed record InventoryImportFileDto(
     string FileName,
@@ -280,14 +356,84 @@ public sealed record InventoryItemDto(
     decimal Value,
     string Status,
     int ReorderLevel,
-    string VisualCode);
+    string VisualCode,
+    bool IsFavorite,
+    bool IsQuickSale);
+
+public sealed record InventoryMetricsDto(
+    int TotalProducts,
+    int LowStockCount,
+    decimal TotalValue,
+    int WarehouseCount,
+    int CategoryCount,
+    int StockTakeCount30Days,
+    decimal TurnoverRatio30Days);
+
+public sealed record InventoryLowStockItemDto(
+    Guid ProductId,
+    string Sku,
+    string ProductName,
+    string Warehouse,
+    int Available,
+    int ReorderLevel,
+    int ShortfallUnits);
+
+public sealed record InventoryWarehouseSummaryDto(
+    string Warehouse,
+    int ProductCount,
+    int InHandUnits,
+    int AvailableUnits,
+    decimal StockValue);
+
+public sealed record InventoryCategorySummaryDto(
+    string Category,
+    int ProductCount,
+    int AvailableUnits,
+    decimal StockValue,
+    decimal SharePercentage);
+
+public sealed record InventoryUsageInsightDto(
+    Guid ProductId,
+    string Sku,
+    string ProductName,
+    int SoldUnits30Days,
+    int NetAdjustment30Days,
+    decimal TurnoverRatio30Days,
+    string CoverageLabel);
+
+public sealed record InventoryBarcodeQueueItemDto(
+    Guid ProductId,
+    string Sku,
+    string ProductName,
+    string Category,
+    string VisualCode,
+    bool IsFavorite,
+    bool IsQuickSale);
+
+public sealed record StockTakeSummaryDto(
+    Guid Id,
+    Guid ProductId,
+    string Sku,
+    string ProductName,
+    string Warehouse,
+    int SystemQuantity,
+    int CountedQuantity,
+    int VarianceQuantity,
+    string Status,
+    string CountedBy,
+    string Notes,
+    DateTimeOffset CountedAt);
 
 public sealed record PosTerminalDto(
     PosCustomerDto Customer,
     IReadOnlyList<string> Categories,
     IReadOnlyList<PosProductDto> Products,
     IReadOnlyList<CartLineDto> Cart,
-    PosSummaryDto Summary);
+    PosSummaryDto Summary,
+    IReadOnlyList<PosHeldOrderDto> HeldOrders,
+    IReadOnlyList<PosBookingOrderDto> Bookings,
+    PosWorkflowMetricsDto Metrics,
+    IReadOnlyList<string> PaymentMethods);
 
 public sealed record PosCustomerDto(
     string Name,
@@ -319,14 +465,68 @@ public sealed record PosSummaryDto(
     decimal Tax,
     decimal Total);
 
+public sealed record PosWorkflowMetricsDto(
+    int HeldOrderCount,
+    int BookingCount,
+    decimal BookingDueAmount,
+    int PendingCollectionCount);
+
+public sealed record PosHeldOrderDto(
+    Guid Id,
+    string TicketNo,
+    string CustomerName,
+    string PricingTier,
+    string HeldBy,
+    DateTimeOffset HeldAt,
+    int ItemCount,
+    decimal Total,
+    IReadOnlyList<CartLineDto> Lines,
+    string Notes);
+
+public sealed record PosBookingOrderDto(
+    Guid Id,
+    string BookingNo,
+    string CustomerName,
+    string? PhoneNumber,
+    string? Email,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? DueAt,
+    string BookedBy,
+    int ItemCount,
+    decimal Subtotal,
+    decimal Discount,
+    decimal Tax,
+    decimal TotalAmount,
+    decimal PaidAmount,
+    decimal BalanceAmount,
+    string PaymentStatus,
+    IReadOnlyList<SaleLineDto> Lines,
+    IReadOnlyList<PosPaymentLineDto> Payments,
+    string Notes);
+
+public sealed record PosPaymentLineDto(
+    string Method,
+    decimal Amount,
+    string? ReferenceNo);
+
 public sealed record PosCartMutationRequestDto(
     Guid ProductId,
     int Quantity);
 
+public sealed record SelectPosCustomerRequestDto(
+    Guid? CustomerId,
+    string? CustomerName = null,
+    string? PhoneNumber = null,
+    string? Email = null);
+
 public sealed record PosCheckoutRequestDto(
     string PaymentMethod,
     decimal? ReceivedAmount,
-    bool SendToFbr);
+    bool SendToFbr,
+    IReadOnlyList<PosPaymentLineRequestDto>? Payments = null,
+    decimal? TaxRatePercent = null,
+    bool TaxExempt = false);
 
 public sealed record PosCheckoutReceiptDto(
     Guid SaleId,
@@ -340,10 +540,50 @@ public sealed record PosCheckoutReceiptDto(
     decimal ReceivedAmount,
     decimal ChangeAmount,
     string FbrStatus,
-    string? FbrInvoiceNumber);
+    string? FbrInvoiceNumber,
+    decimal PaidAmount,
+    decimal BalanceAmount,
+    string PaymentStatus,
+    IReadOnlyList<PosPaymentLineDto> Payments);
+
+public sealed record PosWorkflowActionDto(
+    string Message,
+    PosTerminalDto Terminal,
+    PosBookingOrderDto? Booking = null,
+    PosCheckoutReceiptDto? Receipt = null);
 
 public sealed record SalesHistoryDto(
+    SalesHistoryMetricsDto Metrics,
+    IReadOnlyList<SalesPaymentMethodSummaryDto> PaymentMethods,
+    IReadOnlyList<SalesBookingInsightDto> OpenBookings,
     IReadOnlyList<SalesHistoryItemDto> Items);
+
+public sealed record SalesHistoryMetricsDto(
+    int TransactionCount,
+    decimal NetRevenue,
+    decimal GrossProfit,
+    decimal AverageTicket,
+    int RefundedCount,
+    decimal RefundedAmount,
+    int OpenBookingCount,
+    decimal BookingDueAmount,
+    int DueTodayBookingCount);
+
+public sealed record SalesPaymentMethodSummaryDto(
+    string Method,
+    decimal Amount,
+    int TransactionCount);
+
+public sealed record SalesBookingInsightDto(
+    Guid BookingId,
+    string BookingNo,
+    string CustomerName,
+    decimal TotalAmount,
+    decimal PaidAmount,
+    decimal BalanceAmount,
+    string PaymentStatus,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? DueAt);
 
 public sealed record SalesHistoryItemDto(
     Guid SaleId,
@@ -364,7 +604,46 @@ public sealed record SalesHistoryItemDto(
     string FbrStatus,
     string? FbrInvoiceNumber,
     string? FbrErrorMessage,
-    DateTimeOffset? FbrReportedAt);
+    DateTimeOffset? FbrReportedAt,
+    decimal PaidAmount,
+    decimal BalanceAmount,
+    string PaymentStatus,
+    IReadOnlyList<PosPaymentLineDto> Payments,
+    decimal NetAmount,
+    decimal RefundedAmount,
+    DateTimeOffset? RefundedAt,
+    string? RefundedBy,
+    string? RefundReason,
+    bool InventoryReturned);
+
+public sealed record PosPaymentLineRequestDto(
+    string Method,
+    decimal Amount,
+    string? ReferenceNo);
+
+public sealed record CreateHeldOrderRequestDto(
+    string? Notes);
+
+public sealed record CreateBookingOrderRequestDto(
+    string CustomerName,
+    string? PhoneNumber,
+    string? Email,
+    DateTimeOffset? DueAt,
+    string? Notes,
+    IReadOnlyList<PosPaymentLineRequestDto>? Payments = null);
+
+public sealed record CollectBookingPaymentRequestDto(
+    decimal Amount,
+    string PaymentMethod,
+    string? ReferenceNo,
+    string? Notes);
+
+public sealed record CompleteBookingRequestDto(
+    bool SendToFbr);
+
+public sealed record RefundSaleRequestDto(
+    string? Reason,
+    bool ReturnToInventory = true);
 
 public sealed record SaleLineDto(
     Guid ProductId,
@@ -391,6 +670,38 @@ public sealed record StockAdjustmentRequestDto(
     Guid ProductId,
     int QuantityDelta,
     string Reason);
+
+public sealed record SaveStockTakeRequestDto(
+    Guid ProductId,
+    int CountedQuantity,
+    string? Notes);
+
+public sealed record SaveStockTransferRequestDto(
+    string FromBranchName,
+    string ToBranchName,
+    int Units,
+    DateTimeOffset? ExpectedAt,
+    string Status,
+    string? Notes);
+
+public sealed record SaveGoodsReceiptRequestDto(
+    string PurchaseOrderNo,
+    string VendorName,
+    string WarehouseName,
+    int LineCount,
+    int ReceivedUnits,
+    int VarianceUnits,
+    string Status,
+    string? Notes);
+
+public sealed record SaveGatePassRequestDto(
+    string MovementType,
+    string WarehouseName,
+    string DestinationName,
+    string ReferenceNo,
+    int Units,
+    string Status,
+    string? Notes);
 
 public sealed record SaveWorkspaceUserRequestDto(
     string Email,

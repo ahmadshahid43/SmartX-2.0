@@ -14,6 +14,8 @@ public interface IWorkspaceQueryService
 
     Task<DashboardOverviewDto> GetDashboardAsync(Guid tenantId, CancellationToken cancellationToken);
 
+    Task<ReportsHubDto> GetReportsHubAsync(Guid tenantId, CancellationToken cancellationToken);
+
     Task<InventoryOverviewDto> GetInventoryOverviewAsync(Guid tenantId, CancellationToken cancellationToken);
 
     Task<PosTerminalDto> GetPosTerminalAsync(Guid tenantId, CancellationToken cancellationToken);
@@ -23,6 +25,8 @@ public interface IWorkspaceQueryService
     Task<ProcurementHubDto> GetProcurementHubAsync(Guid tenantId, CancellationToken cancellationToken);
 
     Task<OperationsHubDto> GetOperationsHubAsync(Guid tenantId, CancellationToken cancellationToken);
+
+    Task<WarehouseHubDto> GetWarehouseHubAsync(Guid tenantId, CancellationToken cancellationToken);
 
     Task<FormBuilderDto> GetProductCustomFieldsAsync(Guid tenantId, CancellationToken cancellationToken);
 }

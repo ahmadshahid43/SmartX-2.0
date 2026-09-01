@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { catchError, of } from 'rxjs';
-import { PosCheckoutReceipt, SalesHistoryItem, SaleLine, WorkspaceContext } from './models';
+import { PosCheckoutReceipt, PosPaymentLine, SalesHistoryItem, SaleLine, WorkspaceContext } from './models';
 import { WorkspaceApiService } from './workspace-api.service';
 
 type PrintableSale = PosCheckoutReceipt | SalesHistoryItem;
@@ -29,6 +29,8 @@ interface NormalizedPrintableSale {
   changeAmount: number;
   fbrStatus: string;
   fbrInvoiceNumber: string | null;
+  paymentStatus: string;
+  payments: PosPaymentLine[];
 }
 
 export interface ReceiptPrintJob {
@@ -131,6 +133,8 @@ export class ReceiptPrintService {
       changeAmount: sale.changeAmount,
       fbrStatus: sale.fbrStatus,
       fbrInvoiceNumber: sale.fbrInvoiceNumber,
+      paymentStatus: sale.paymentStatus,
+      payments: sale.payments,
     };
   }
 
@@ -160,6 +164,21 @@ export class ReceiptPrintService {
     const contactLine = brand.contact
       ? `<p>${this.escapeHtml(brand.contact)}</p>`
       : '';
+    const paymentBreakdown = sale.payments.length > 0
+      ? `
+          <section class="print-payment-breakdown">
+            <div class="print-meta-label">Payment Breakdown</div>
+            ${sale.payments
+              .map(
+                (payment) => `
+                  <div class="print-payment-row">
+                    <span>${this.escapeHtml(payment.method)}${payment.referenceNo ? ` • ${this.escapeHtml(payment.referenceNo)}` : ''}</span>
+                    <strong>${currency.format(payment.amount)}</strong>
+                  </div>`,
+              )
+              .join('')}
+          </section>`
+      : '';
 
     return `
       <main class="print-sheet ${isSlip ? 'is-slip' : 'is-invoice'}">
@@ -186,7 +205,7 @@ export class ReceiptPrintService {
           <div class="print-meta-block">
             <div class="print-meta-label">Payment</div>
             <div>${this.escapeHtml(sale.paymentMethod)}</div>
-            <p class="print-meta">${this.escapeHtml(sale.occurredAt)}</p>
+            <p class="print-meta">${this.escapeHtml(sale.paymentStatus)} • ${this.escapeHtml(sale.occurredAt)}</p>
           </div>
           <div class="print-meta-block">
             <div class="print-meta-label">Cashier</div>
@@ -211,6 +230,8 @@ export class ReceiptPrintService {
           </thead>
           <tbody>${lineRows}</tbody>
         </table>
+
+        ${paymentBreakdown}
 
         <section class="print-totals">
           <div class="print-totals-row"><span>Subtotal</span><strong>${currency.format(sale.subtotal)}</strong></div>

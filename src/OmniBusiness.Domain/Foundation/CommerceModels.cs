@@ -61,6 +61,11 @@ public sealed record SaleLine(
     decimal UnitPrice,
     decimal LineTotal);
 
+public sealed record PaymentAllocation(
+    string Method,
+    decimal Amount,
+    string? ReferenceNo = null);
+
 public sealed record SaleRecord(
     Guid Id,
     Guid TenantId,
@@ -81,7 +86,16 @@ public sealed record SaleRecord(
     string FbrStatus = "QueuedOffline",
     string? FbrInvoiceNumber = null,
     string? FbrErrorMessage = null,
-    DateTimeOffset? FbrReportedAt = null);
+    DateTimeOffset? FbrReportedAt = null,
+    decimal PaidAmount = 0,
+    decimal BalanceAmount = 0,
+    string PaymentStatus = "Paid",
+    IReadOnlyList<PaymentAllocation>? Payments = null,
+    decimal RefundedAmount = 0,
+    DateTimeOffset? RefundedAt = null,
+    string? RefundedBy = null,
+    string? RefundReason = null,
+    bool InventoryReturned = false);
 
 public sealed record StockAdjustmentRecord(
     Guid Id,
@@ -104,6 +118,42 @@ public sealed record CartLine(
     int Quantity,
     decimal UnitPrice,
     bool AllowQuantityEdit);
+
+public sealed record PosHeldOrder(
+    Guid Id,
+    Guid TenantId,
+    string TicketNo,
+    string CustomerName,
+    string PricingTier,
+    string HeldBy,
+    DateTimeOffset HeldAt,
+    int ItemCount,
+    decimal Total,
+    IReadOnlyList<CartLine> Lines,
+    string Notes = "");
+
+public sealed record PosBookingOrder(
+    Guid Id,
+    Guid TenantId,
+    string BookingNo,
+    string CustomerName,
+    string? PhoneNumber,
+    string? Email,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? DueAt,
+    string BookedBy,
+    IReadOnlyList<SaleLine> Lines,
+    int ItemCount,
+    decimal Subtotal,
+    decimal Discount,
+    decimal Tax,
+    decimal TotalAmount,
+    decimal PaidAmount,
+    decimal BalanceAmount,
+    string PaymentStatus,
+    IReadOnlyList<PaymentAllocation>? Payments = null,
+    string Notes = "");
 
 public sealed record Vendor(
     Guid Id,
@@ -140,7 +190,52 @@ public sealed record StockTransfer(
     DateTimeOffset CreatedAt,
     DateTimeOffset? ExpectedAt,
     int Units,
-    string RequestedBy);
+    string RequestedBy,
+    string Notes = "");
+
+public sealed record GoodsReceipt(
+    Guid Id,
+    Guid TenantId,
+    string ReceiptNo,
+    string PurchaseOrderNo,
+    string VendorName,
+    string WarehouseName,
+    string Status,
+    DateTimeOffset ReceivedAt,
+    string ReceivedBy,
+    int LineCount,
+    int ReceivedUnits,
+    int VarianceUnits,
+    string Notes = "");
+
+public sealed record GatePass(
+    Guid Id,
+    Guid TenantId,
+    string GatePassNo,
+    string MovementType,
+    string WarehouseName,
+    string DestinationName,
+    string ReferenceNo,
+    string Status,
+    DateTimeOffset IssuedAt,
+    string IssuedBy,
+    int Units,
+    string Notes = "");
+
+public sealed record StockTakeSession(
+    Guid Id,
+    Guid TenantId,
+    Guid ProductId,
+    string Sku,
+    string ProductName,
+    string Warehouse,
+    int SystemQuantity,
+    int CountedQuantity,
+    int VarianceQuantity,
+    string Status,
+    string CountedBy,
+    string Notes,
+    DateTimeOffset CountedAt);
 
 public sealed record CashShift(
     Guid Id,

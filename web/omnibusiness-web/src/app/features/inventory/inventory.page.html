@@ -2,7 +2,7 @@
   <div class="page-header with-actions">
     <div>
       <h1>Inventory Control</h1>
-      <p>Create products, import Excel stock sheets, and maintain item master data without touching code.</p>
+      <p>Run stock take, monitor warehouse health, import Excel stock sheets, and prepare barcode-ready items from one command center.</p>
     </div>
 
     <div class="page-actions">
@@ -45,6 +45,61 @@
   }
 
   @if (inventory(); as data) {
+    <section class="inventory-summary-grid">
+      <article class="surface-card summary-card">
+        <span>Total Products</span>
+        <strong>{{ inventorySummary().totalProducts }}</strong>
+        <small>SKU count currently active for inventory, billing, and reporting.</small>
+      </article>
+
+      <article class="surface-card summary-card">
+        <span>Low Stock Watch</span>
+        <strong>{{ inventorySummary().lowStockCount }}</strong>
+        <small>Items touching reorder levels and needing replenishment attention.</small>
+      </article>
+
+      <article class="surface-card summary-card">
+        <span>Inventory Value</span>
+        <strong>{{ inventorySummary().totalValue | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+        <small>Live stock value from current unit prices and in-hand quantities.</small>
+      </article>
+
+      <article class="surface-card summary-card">
+        <span>Stock Takes 30d</span>
+        <strong>{{ inventorySummary().stockTakeCount30Days }}</strong>
+        <small>Recent audit postings from cycle counts and physical verification.</small>
+      </article>
+
+      <article class="surface-card summary-card accent">
+        <span>Warehouse / Category</span>
+        <strong>{{ inventorySummary().warehouseCount }} / {{ inventorySummary().categoryCount }}</strong>
+        <small>Coverage of active storage locations and live merchandise categories.</small>
+      </article>
+
+      <article class="surface-card summary-card accent">
+        <span>Turnover 30d</span>
+        <strong>{{ inventorySummary().turnoverRatio30Days | number:'1.0-2' }}x</strong>
+        <small>Approximate turnover velocity using recent sales movement against available stock.</small>
+      </article>
+    </section>
+
+    <article class="surface-card inventory-command-center">
+      <div class="inventory-command-copy">
+        <p class="eyebrow">Inventory Operations</p>
+        <h2>{{ data.title }}</h2>
+        <p>{{ data.subtitle }}</p>
+      </div>
+
+      <div class="inventory-command-pills">
+        <span class="status-chip neutral">{{ inventorySummary().quickReadyCount }} sale-ready items</span>
+        <span class="status-chip warning">{{ data.lowStockItems.length }} low stock alerts</span>
+        <span class="status-chip success">{{ data.barcodeQueue.length }} barcode-ready items</span>
+        @if (selectedProduct(); as selected) {
+          <span class="status-chip success">{{ selected.productName }}</span>
+        }
+      </div>
+    </article>
+
     <article class="surface-card import-card">
       <div class="section-header">
         <div>
@@ -69,10 +124,177 @@
       </div>
     </article>
 
+    <section class="insights-grid">
+      <article class="surface-card insight-card">
+        <div class="section-header">
+          <div>
+            <h2>Low Stock Watch</h2>
+            <p>Priority items that need fast replenishment or warehouse balancing.</p>
+          </div>
+        </div>
+
+        <div class="stack-list">
+          @for (item of data.lowStockItems; track item.productId) {
+            <button class="metric-row interactive-row" type="button" (click)="loadLowStockItem(item.productId)">
+              <div>
+                <strong>{{ item.productName }}</strong>
+                <span>{{ item.sku }} • {{ item.warehouse }}</span>
+              </div>
+              <div class="metric-row-meta">
+                <span class="status-chip error">Short {{ item.shortfallUnits }}</span>
+                <small>{{ item.available }}/{{ item.reorderLevel }}</small>
+              </div>
+            </button>
+          } @empty {
+            <div class="empty-note">Abhi koi low-stock alert nahi hai.</div>
+          }
+        </div>
+      </article>
+
+      <article class="surface-card insight-card">
+        <div class="section-header">
+          <div>
+            <h2>Warehouse Summary</h2>
+            <p>Warehouse-wise stock, availability, and value exposure.</p>
+          </div>
+        </div>
+
+        <div class="stack-list">
+          @for (warehouse of data.warehouseSummaries; track warehouse.warehouse) {
+            <div class="metric-row">
+              <div>
+                <strong>{{ warehouse.warehouse }}</strong>
+                <span>{{ warehouse.productCount }} products • {{ warehouse.inHandUnits }} in hand</span>
+              </div>
+              <div class="metric-row-meta">
+                <strong>{{ warehouse.stockValue | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+                <small>{{ warehouse.availableUnits }} available</small>
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-note">Warehouse summary inventory add hone ke baad show hogi.</div>
+          }
+        </div>
+      </article>
+
+      <article class="surface-card insight-card">
+        <div class="section-header">
+          <div>
+            <h2>Category Mix</h2>
+            <p>Category contribution by available units and stock value.</p>
+          </div>
+        </div>
+
+        <div class="stack-list">
+          @for (category of data.categorySummaries; track category.category) {
+            <div class="metric-row">
+              <div>
+                <strong>{{ category.category }}</strong>
+                <span>{{ category.productCount }} products • {{ category.availableUnits }} available</span>
+              </div>
+              <div class="metric-row-meta">
+                <strong>{{ category.stockValue | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+                <small>{{ category.sharePercentage | number:'1.0-1' }}%</small>
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-note">Category mix tab show hogi jab products add honge.</div>
+          }
+        </div>
+      </article>
+
+      <article class="surface-card insight-card">
+        <div class="section-header">
+          <div>
+            <h2>Usage & Turnover</h2>
+            <p>Recent selling and adjustment movement against current stock coverage.</p>
+          </div>
+        </div>
+
+        <div class="stack-list">
+          @for (usage of data.usageInsights; track usage.productId) {
+            <div class="usage-row">
+              <div class="usage-main">
+                <strong>{{ usage.productName }}</strong>
+                <span>{{ usage.sku }} • {{ usageTrendLabel(usage) }}</span>
+              </div>
+              <div class="usage-meta">
+                <span class="status-chip neutral">{{ usage.turnoverRatio30Days | number:'1.0-2' }}x</span>
+                <span [class]="coverageClass(usage.coverageLabel)">{{ usage.coverageLabel }}</span>
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-note">Recent sales ya adjustments aane par turnover insights yahan show hongi.</div>
+          }
+        </div>
+      </article>
+
+      <article class="surface-card insight-card barcode-card">
+        <div class="section-header">
+          <div>
+            <h2>Barcode Queue</h2>
+            <p>Fast-pick items ready for shelf labels, barcode slips, or scanner mapping.</p>
+          </div>
+        </div>
+
+        <div class="barcode-grid">
+          @for (barcode of data.barcodeQueue; track barcode.productId) {
+            <div class="barcode-item">
+              <span class="barcode-visual">{{ barcode.visualCode }}</span>
+              <strong>{{ barcode.productName }}</strong>
+              <small>{{ barcode.sku }} • {{ barcode.category }}</small>
+              <div class="barcode-flags">
+                @if (barcode.isFavorite) {
+                  <span class="status-chip success">Favorite</span>
+                }
+                @if (barcode.isQuickSale) {
+                  <span class="status-chip neutral">Quick Sale</span>
+                }
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-note">Barcode queue products create hone ke baad show hogi.</div>
+          }
+        </div>
+      </article>
+    </section>
+
     <div class="inventory-layout">
       <article class="surface-card table-card">
+        <div class="table-toolbar inventory-filters">
+          <label class="field search-field">
+            <span>Search</span>
+            <input [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" type="text" placeholder="Search by product, SKU, or visual code" />
+          </label>
+
+          <label class="field">
+            <span>Warehouse</span>
+            <select [ngModel]="selectedWarehouseFilter()" (ngModelChange)="selectedWarehouseFilter.set($event)">
+              <option value="all">All Warehouses</option>
+              @for (warehouse of data.warehouses; track warehouse) {
+                <option [value]="warehouse">{{ warehouse }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Category</span>
+            <select [ngModel]="selectedCategoryFilter()" (ngModelChange)="selectedCategoryFilter.set($event)">
+              <option value="all">All Categories</option>
+              @for (category of data.categories; track category) {
+                <option [value]="category">{{ category }}</option>
+              }
+            </select>
+          </label>
+
+          <button class="secondary-button compact-button align-end" type="button" (click)="clearFilters()">
+            <span class="material-symbols-outlined">filter_alt_off</span>
+            Clear
+          </button>
+        </div>
+
         <div class="table-toolbar">
-          <div class="table-meta">Showing {{ data.items.length }} product(s)</div>
+          <div class="table-meta">Showing {{ filteredItems().length }} of {{ data.items.length }} product(s)</div>
         </div>
 
         <div class="table-scroll">
@@ -82,6 +304,7 @@
                 <th>SKU</th>
                 <th>Product</th>
                 <th>Category</th>
+                <th>Warehouse</th>
                 <th>In Hand</th>
                 <th>Available</th>
                 <th>Price</th>
@@ -90,7 +313,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (item of data.items; track item.productId) {
+              @for (item of filteredItems(); track item.productId) {
                 <tr
                   class="inventory-row"
                   [class.is-selected]="selectedProductId() === item.productId"
@@ -99,6 +322,7 @@
                   <td class="mono">{{ item.sku }}</td>
                   <td>{{ item.productName }}</td>
                   <td>{{ item.category }}</td>
+                  <td>{{ item.warehouse }}</td>
                   <td class="mono">{{ item.inHand }}</td>
                   <td class="mono" [class.text-danger]="item.available <= item.reorderLevel">{{ item.available }}</td>
                   <td class="mono">{{ item.unitPrice | currency:'PKR':'symbol-narrow':'1.0-0' }}</td>
@@ -112,7 +336,7 @@
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="8">No inventory items yet. Create a product manually ya Excel sheet import karein.</td>
+                  <td colspan="9">No inventory items yet. Create a product manually ya Excel sheet import karein.</td>
                 </tr>
               }
             </tbody>
@@ -125,7 +349,7 @@
           <div class="section-header">
             <div>
               <h2>{{ selectedProductId() ? 'Edit Product' : 'Create Product' }}</h2>
-              <p>Maintain the retail catalog from the admin side.</p>
+              <p>Maintain the retail catalog, pricing, and warehouse mapping from admin.</p>
             </div>
           </div>
 
@@ -192,6 +416,76 @@
           </button>
         </article>
 
+        @if (selectedProduct(); as selected) {
+          <article class="surface-card admin-card selected-product-card">
+            <div class="section-header">
+              <div>
+                <h2>Selected Product Snapshot</h2>
+                <p>Fast reference for the item currently open in the editor.</p>
+              </div>
+              <span [class]="statusClass(selected)">{{ selected.status }}</span>
+            </div>
+
+            <div class="selected-product-grid">
+              <div>
+                <span class="eyebrow">SKU</span>
+                <strong class="mono">{{ selected.sku }}</strong>
+              </div>
+              <div>
+                <span class="eyebrow">Category</span>
+                <strong>{{ selected.category }}</strong>
+              </div>
+              <div>
+                <span class="eyebrow">Available</span>
+                <strong>{{ selected.available }}</strong>
+              </div>
+              <div>
+                <span class="eyebrow">Value</span>
+                <strong>{{ selected.value | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+              </div>
+            </div>
+          </article>
+        }
+
+        <article class="surface-card admin-card">
+          <div class="section-header">
+            <div>
+              <h2>Stock Take / Physical Count</h2>
+              <p>Post cycle count, record variance, and keep audit history for the branch.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <label class="field">
+              <span>Product</span>
+              <select [(ngModel)]="stockTakeProductId" [disabled]="data.items.length === 0">
+                @for (item of data.items; track item.productId) {
+                  <option [value]="item.productId">{{ item.productName }} ({{ item.sku }})</option>
+                }
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Counted Quantity</span>
+              <input [(ngModel)]="stockTakeCountedQuantity" type="number" min="0" />
+            </label>
+
+            <label class="field field-span-2">
+              <span>Count Notes</span>
+              <input [(ngModel)]="stockTakeNotes" type="text" placeholder="Example: Shelf recount after night shift" />
+            </label>
+          </div>
+
+          @if (data.items.length === 0) {
+            <div class="empty-note">Pehle inventory add karein, phir stock take available hogi.</div>
+          }
+
+          <button class="secondary-button wide" type="button" [disabled]="loading() || data.items.length === 0" (click)="applyStockTake()">
+            <span class="material-symbols-outlined">checklist</span>
+            Post Stock Take
+          </button>
+        </article>
+
         <article class="surface-card admin-card">
           <div class="section-header">
             <div>
@@ -215,7 +509,7 @@
               <input [(ngModel)]="adjustmentDelta" type="number" />
             </label>
 
-            <label class="field">
+            <label class="field field-span-2">
               <span>Reason</span>
               <input [(ngModel)]="adjustmentReason" type="text" />
             </label>
@@ -229,6 +523,34 @@
             <span class="material-symbols-outlined">inventory</span>
             Save Adjustment
           </button>
+        </article>
+
+        <article class="surface-card admin-card">
+          <div class="section-header">
+            <div>
+              <h2>Recent Stock Takes</h2>
+              <p>Latest physical counts with operator and variance trail.</p>
+            </div>
+          </div>
+
+          <div class="stack-list">
+            @for (stockTake of data.recentStockTakes; track stockTake.id) {
+              <div class="audit-row">
+                <div>
+                  <strong>{{ stockTake.productName }}</strong>
+                  <span>{{ stockTake.sku }} • {{ stockTake.countedBy }} • {{ stockTake.countedAt | date:'dd MMM, hh:mm a' }}</span>
+                </div>
+                <div class="audit-meta">
+                  <span [class]="labelStatusClass(stockTake.status)">{{ stockTake.status }}</span>
+                  <small [class]="varianceClass(stockTake.varianceQuantity)">
+                    {{ stockTake.varianceQuantity > 0 ? '+' : '' }}{{ stockTake.varianceQuantity }}
+                  </small>
+                </div>
+              </div>
+            } @empty {
+              <div class="empty-note">Abhi koi stock take post nahi hui.</div>
+            }
+          </div>
         </article>
       </aside>
     </div>

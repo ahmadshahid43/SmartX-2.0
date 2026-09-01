@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+#if ENABLE_SWAGGER
 using Microsoft.OpenApi;
+#endif
 using OmniBusiness.Api.Infrastructure;
 using OmniBusiness.Infrastructure;
 
@@ -51,6 +53,7 @@ builder.Services.AddControllers()
         };
     });
 builder.Services.AddOmniBusinessFoundation(builder.Configuration, builder.Environment);
+#if ENABLE_SWAGGER
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -70,6 +73,7 @@ builder.Services.AddSwaggerGen(options =>
         [new OpenApiSecuritySchemeReference("Bearer", document, null)] = []
     });
 });
+#endif
 
 var app = builder.Build();
 
@@ -77,11 +81,12 @@ app.UseExceptionHandler();
 
 // Serve the built Angular SPA at the same origin as the API when its files are present in the
 // content root's wwwroot (production container image). On the laptop/dev install wwwroot is empty,
-// so these are no-ops and the "/" route below still redirects to Swagger.
+// so these are no-ops and the API root below remains available as a lightweight status response.
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.UseCors("frontend");
+#if ENABLE_SWAGGER
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
@@ -89,10 +94,21 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "swagger";
 });
 app.MapOpenApi();
+#endif
 app.UseAuthentication();
 app.UseAuthorization();
 
+#if ENABLE_SWAGGER
 app.MapGet("/", () => Results.Redirect("/swagger"));
+#else
+app.MapGet("/", () => Results.Ok(new
+{
+    service = "SmartX API",
+    mode = "offline-ready",
+    health = "/health",
+    documentation = "Build with -p:EnableSwagger=true to enable Swagger."
+}));
+#endif
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/ready");
 app.MapControllers();

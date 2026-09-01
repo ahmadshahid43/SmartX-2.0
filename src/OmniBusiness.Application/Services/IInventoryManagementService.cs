@@ -21,6 +21,12 @@ public interface IInventoryManagementService
         StockAdjustmentRequestDto request,
         CancellationToken cancellationToken);
 
+    Task<InventoryOverviewDto> CreateStockTakeAsync(
+        Guid tenantId,
+        Guid userId,
+        SaveStockTakeRequestDto request,
+        CancellationToken cancellationToken);
+
     Task<InventoryImportResultDto> ImportInventoryAsync(
         Guid tenantId,
         InventoryImportFileDto request,

@@ -22,4 +22,11 @@ public sealed record WorkspaceSnapshot(
     IReadOnlyList<StockTransfer>? StockTransfers = null,
     IReadOnlyList<CashShift>? CashShifts = null,
     SubscriptionPlanSettings? SubscriptionSettings = null,
-    int NextSaleSequence = 8902);
+    int NextSaleSequence = 8902,
+    IReadOnlyList<GoodsReceipt>? GoodsReceipts = null,
+    IReadOnlyList<GatePass>? GatePasses = null,
+    IReadOnlyList<StockTakeSession>? StockTakes = null,
+    IReadOnlyList<PosHeldOrder>? HeldOrders = null,
+    IReadOnlyList<PosBookingOrder>? Bookings = null,
+    int NextBookingSequence = 4100,
+    int NextHoldSequence = 120);

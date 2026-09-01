@@ -1,0 +1,73 @@
+@if (reports(); as data) {
+  <section class="reports-page page-stack">
+    <header class="reports-hero surface-card">
+      <div>
+        <p class="eyebrow">SmartX Analytics Center</p>
+        <h1>Reports & business intelligence</h1>
+        <p>POS, inventory, payments, tax/FBR, suppliers, warehouse aur finance ki live operational reporting.</p>
+      </div>
+      <div class="report-actions">
+        <span class="status-chip neutral">Updated {{ data.generatedAt | date:'MMM d, h:mm a' }}</span>
+        <button class="primary-button compact-button" type="button" (click)="exportCurrentReport()">
+          <span class="material-symbols-outlined">download</span>
+          Export current CSV
+        </button>
+      </div>
+    </header>
+
+    <nav class="report-tabs" aria-label="Report categories">
+      @for (section of data.sections; track section.key) {
+        <button type="button" [class.active]="activeSection() === section.key" (click)="selectSection(section.key)">
+          <span class="material-symbols-outlined">{{ section.icon }}</span>
+          <span>{{ section.title }}</span>
+        </button>
+      }
+    </nav>
+
+    @if (selectedSection(); as section) {
+      <section class="report-section surface-card">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">{{ section.title }}</p>
+            <h2>{{ section.description }}</h2>
+          </div>
+        </div>
+        <div class="report-metric-grid">
+          @for (metric of section.metrics; track metric.key) {
+            <article class="report-metric" [class.attention]="metric.status === 'attention'" [class.risk]="metric.status === 'risk'" [class.muted]="metric.status === 'data-required'">
+              <span>{{ metric.label }}</span>
+              <strong>{{ metricValue(metric) }}</strong>
+              <small>@if (metric.status === 'data-required') { Post entries to activate this report. } @else if (metric.status === 'attention') { Review recommended. } @else if (metric.status === 'risk') { Action required. } @else { Live from current workspace data. }</small>
+            </article>
+          }
+        </div>
+      </section>
+
+      @if (drilldownRows().length > 0) {
+        <section class="surface-card report-table-card">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Drilldown</p>
+              <h2>{{ drilldownTitle() }}</h2>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Report group</th><th>Count</th><th>Amount</th><th>Measure</th></tr></thead>
+              <tbody>
+                @for (row of drilldownRows(); track row.label) {
+                  <tr><td>{{ row.label }}</td><td>{{ row.count }}</td><td>{{ row.amount | currency:'PKR':'symbol-narrow':'1.0-0' }}</td><td>{{ row.secondaryLabel }}</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      } @else {
+        <section class="surface-card report-empty-state">
+          <span class="material-symbols-outlined">data_check</span>
+          <div><strong>Ready for detailed reporting</strong><p>Is category ki detail automatically populate hogi jab related invoices, stock movements, expenses ya ledger entries create hon.</p></div>
+        </section>
+      }
+    }
+  </section>
+}

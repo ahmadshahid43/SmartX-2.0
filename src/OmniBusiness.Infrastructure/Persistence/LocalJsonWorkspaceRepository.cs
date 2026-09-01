@@ -101,10 +101,16 @@ public sealed class LocalJsonWorkspaceRepository(
             localAppDataRoot = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         }
 
-        var localPath = WritableStoragePathResolver.ResolveWritableFilePath(
+        var configuredLocalPath = ResolvePath(_options.LocalDataPath);
+        var fileName = Path.GetFileName(configuredLocalPath);
+        var projectRuntimeRoot = Path.GetFullPath(
+            Path.Combine(environment.ContentRootPath, "..", "..", ".artifacts", "runtime"));
+        var localDirectory = WritableStoragePathResolver.ResolveWritableDirectory(
             environment,
-            _options.LocalDataPath,
-            Path.Combine(localAppDataRoot, "SmartX", "foundation.local.json"));
+            Path.GetDirectoryName(configuredLocalPath),
+            projectRuntimeRoot,
+            Path.Combine(Path.GetTempPath(), "SmartX"));
+        var localPath = Path.Combine(localDirectory, string.IsNullOrWhiteSpace(fileName) ? "foundation.local.json" : fileName);
         var seedPath = ResolvePath(_options.SeedPath);
 
         var directoryPath = Path.GetDirectoryName(localPath)

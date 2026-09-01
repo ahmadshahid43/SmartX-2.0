@@ -1,8 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import {
+  CollectBookingPaymentRequest,
+  CompleteBookingRequest,
+  CreateBookingOrderRequest,
+  CreateHeldOrderRequest,
   CustomerHub,
   DashboardOverview,
+  ReportsHub,
   FormBuilder,
   InventoryImportResult,
   InventoryOverview,
@@ -12,7 +17,14 @@ import {
   PosCheckoutRequest,
   PosCartMutationRequest,
   PosTerminal,
+  PosWorkflowAction,
   ProcurementHub,
+  RefundSaleRequest,
+  SaveStockTakeRequest,
+  SaveGatePassRequest,
+  SaveGoodsReceiptRequest,
+  SaveStockTransferRequest,
+  SelectPosCustomerRequest,
   SalesHistoryItem,
   SalesHistory,
   SaveFormFieldRequest,
@@ -20,6 +32,7 @@ import {
   SaveProductRequest,
   SaveWorkspaceUserRequest,
   StockAdjustmentRequest,
+  WarehouseHub,
   WorkspaceContext,
   WorkspaceUsers,
 } from './models';
@@ -52,6 +65,10 @@ export class WorkspaceApiService {
     return this.http.get<DashboardOverview>('/api/v1/dashboard/overview');
   }
 
+  getReportsHub() {
+    return this.http.get<ReportsHub>('/api/v1/dashboard/reports');
+  }
+
   getInventory() {
     return this.http.get<InventoryOverview>('/api/v1/inventory/overview');
   }
@@ -66,6 +83,26 @@ export class WorkspaceApiService {
     return this.http.get<PosTerminal>('/api/v1/pos/terminal');
   }
 
+  holdCurrentSale(request: CreateHeldOrderRequest) {
+    return this.http.post<PosWorkflowAction>('/api/v1/pos/hold', request);
+  }
+
+  resumeHeldOrder(heldOrderId: string) {
+    return this.http.post<PosWorkflowAction>(`/api/v1/pos/hold/${heldOrderId}/resume`, {});
+  }
+
+  createBooking(request: CreateBookingOrderRequest) {
+    return this.http.post<PosWorkflowAction>('/api/v1/pos/bookings', request);
+  }
+
+  collectBookingPayment(bookingId: string, request: CollectBookingPaymentRequest) {
+    return this.http.post<PosWorkflowAction>(`/api/v1/pos/bookings/${bookingId}/payments`, request);
+  }
+
+  completeBooking(bookingId: string, request: CompleteBookingRequest) {
+    return this.http.post<PosWorkflowAction>(`/api/v1/pos/bookings/${bookingId}/complete`, request);
+  }
+
   saveCartLine(productId: string, quantity: number) {
     return this.http.put<PosTerminal>(`/api/v1/pos/cart/items/${productId}`, {
       productId,
@@ -77,6 +114,10 @@ export class WorkspaceApiService {
     return this.http.delete<PosTerminal>(`/api/v1/pos/cart/items/${productId}`);
   }
 
+  selectPosCustomer(request: SelectPosCustomerRequest) {
+    return this.http.put<PosTerminal>('/api/v1/pos/customer', request);
+  }
+
   checkout(request: PosCheckoutRequest) {
     return this.http.post<PosCheckoutReceipt>('/api/v1/pos/checkout', request);
   }
@@ -85,12 +126,32 @@ export class WorkspaceApiService {
     return this.http.get<SalesHistory>('/api/v1/pos/sales');
   }
 
+  refundSale(saleId: string, request: RefundSaleRequest) {
+    return this.http.post<SalesHistoryItem>(`/api/v1/pos/sales/${saleId}/refund`, request);
+  }
+
   getProcurementHub() {
     return this.http.get<ProcurementHub>('/api/v1/procurement/hub');
   }
 
   getOperationsHub() {
     return this.http.get<OperationsHub>('/api/v1/operations/hub');
+  }
+
+  getWarehouseHub() {
+    return this.http.get<WarehouseHub>('/api/v1/warehouse/hub');
+  }
+
+  createStockTransfer(request: SaveStockTransferRequest) {
+    return this.http.post<WarehouseHub>('/api/v1/warehouse/stock-transfers', request);
+  }
+
+  createGoodsReceipt(request: SaveGoodsReceiptRequest) {
+    return this.http.post<WarehouseHub>('/api/v1/warehouse/goods-receipts', request);
+  }
+
+  createGatePass(request: SaveGatePassRequest) {
+    return this.http.post<WarehouseHub>('/api/v1/warehouse/gate-passes', request);
   }
 
   submitSaleToFbr(saleId: string) {
@@ -123,6 +184,10 @@ export class WorkspaceApiService {
 
   adjustStock(request: StockAdjustmentRequest) {
     return this.http.post<InventoryOverview>('/api/v1/inventory/stock-adjustments', request);
+  }
+
+  createStockTake(request: SaveStockTakeRequest) {
+    return this.http.post<InventoryOverview>('/api/v1/inventory/stock-takes', request);
   }
 
   createUser(request: SaveWorkspaceUserRequest) {

@@ -49,7 +49,7 @@ public static class DependencyInjection
             {
                 "EmbeddedSeed" => new EmbeddedWorkspaceRepository(environment),
                 "LocalJson" => ActivatorUtilities.CreateInstance<LocalJsonWorkspaceRepository>(_),
-                "Supabase" or "Postgres" => ActivatorUtilities.CreateInstance<PostgresWorkspaceRepository>(_),
+                "Supabase" or "Postgres" => CreatePostgresRepository(_),
                 _ => throw new InvalidOperationException(
                     $"Unsupported persistence provider '{persistenceOptions.Provider}'.")
             });
@@ -60,6 +60,7 @@ public static class DependencyInjection
         services.AddScoped<IWorkspaceQueryService, WorkspaceQueryService>();
         services.AddScoped<IPosWorkflowService, PosWorkflowService>();
         services.AddScoped<IInventoryManagementService, InventoryManagementService>();
+        services.AddScoped<IWarehouseWorkflowService, WarehouseWorkflowService>();
         services.AddScoped<ICustomizationCommandService, CustomizationCommandService>();
         services.AddScoped<IUserManagementService, UserManagementService>();
         services.AddScoped<IModuleManagementService, ModuleManagementService>();
@@ -71,5 +72,21 @@ public static class DependencyInjection
                 _ => { });
 
         return services;
+    }
+
+    private static IWorkspaceRepository CreatePostgresRepository(IServiceProvider serviceProvider)
+    {
+        var repositoryType = Type.GetType(
+            "OmniBusiness.Infrastructure.Persistence.PostgresWorkspaceRepository, OmniBusiness.Infrastructure",
+            throwOnError: false);
+
+        if (repositoryType is null)
+        {
+            throw new InvalidOperationException(
+                "Postgres/Supabase persistence is not included in this offline build. " +
+                "Rebuild with -p:EnablePostgresProvider=true to enable it.");
+        }
+
+        return (IWorkspaceRepository)ActivatorUtilities.CreateInstance(serviceProvider, repositoryType);
     }
 }

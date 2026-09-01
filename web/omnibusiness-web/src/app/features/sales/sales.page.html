@@ -1,8 +1,8 @@
-<section class="page-stack">
+<section class="page-stack sales-command">
   <div class="page-header with-actions">
     <div>
-      <h1>Sales History</h1>
-      <p>Completed POS checkouts, receipt detail, and daily cashier visibility.</p>
+      <h1>Sales Command Center</h1>
+      <p>Track net receipts, refund actions, payment mix, and open booking recoveries from one screen.</p>
     </div>
 
     <div class="page-actions">
@@ -22,36 +22,157 @@
   }
 
   @if (loading()) {
-    <div class="feedback-card">Loading sales history...</div>
+    <div class="feedback-card">Loading sales command center...</div>
   }
 
   @if (sales(); as salesData) {
-    <div class="metric-grid">
-      <article class="surface-card metric-card">
-        <div class="metric-label">Transactions</div>
-        <div class="metric-value">{{ summary().transactionCount }}</div>
+    <div class="metric-grid sales-metric-grid">
+      <article class="surface-card metric-card accent-card">
+        <div class="metric-label">Receipts</div>
+        <div class="metric-value">{{ metrics().transactionCount }}</div>
+        <p>Completed and refunded checkout trail.</p>
       </article>
 
       <article class="surface-card metric-card">
-        <div class="metric-label">Revenue</div>
-        <div class="metric-value">{{ summary().revenue | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+        <div class="metric-label">Net Sales</div>
+        <div class="metric-value">{{ metrics().netRevenue | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+        <p>Refund-adjusted revenue footprint.</p>
       </article>
 
       <article class="surface-card metric-card">
         <div class="metric-label">Gross Profit</div>
-        <div class="metric-value">{{ summary().grossProfit | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+        <div class="metric-value">{{ metrics().grossProfit | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+        <p>Current realized margin after refunds.</p>
       </article>
 
       <article class="surface-card metric-card">
-        <div class="metric-label">Average Ticket</div>
-        <div class="metric-value">{{ summary().averageTicket | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+        <div class="metric-label">Refunded</div>
+        <div class="metric-value">{{ metrics().refundedAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+        <p>{{ metrics().refundedCount }} receipt(s) reversed.</p>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">Open Bookings</div>
+        <div class="metric-value">{{ metrics().openBookingCount }}</div>
+        <p>{{ metrics().bookingDueAmount | currency:'PKR':'symbol-narrow':'1.0-0' }} still due.</p>
+      </article>
+
+      <article class="surface-card metric-card">
+        <div class="metric-label">Due Today</div>
+        <div class="metric-value">{{ metrics().dueTodayBookingCount }}</div>
+        <p>{{ metrics().averageTicket | currency:'PKR':'symbol-narrow':'1.0-0' }} average ticket.</p>
+      </article>
+    </div>
+
+    <div class="sales-insights-grid">
+      <article class="surface-card insight-card payment-mix-card">
+        <div class="section-header">
+          <div>
+            <h2>Payment Mix</h2>
+            <p>Collection visibility by tender type.</p>
+          </div>
+          <span class="status-chip neutral">{{ paymentMethods().length }} methods</span>
+        </div>
+
+        <div class="payment-mix-grid">
+          @for (method of paymentMethods(); track method.method) {
+            <div class="payment-mix-item">
+              <div class="payment-mix-top">
+                <strong>{{ method.method }}</strong>
+                <span>{{ paymentShare(method.amount) }}%</span>
+              </div>
+              <div class="payment-mix-value">{{ method.amount | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+              <p>{{ method.transactionCount }} receipt(s)</p>
+            </div>
+          } @empty {
+            <div class="empty-note">Payment mix automatically appears after live POS checkouts.</div>
+          }
+        </div>
+      </article>
+
+      <article class="surface-card insight-card bookings-watch-card">
+        <div class="section-header">
+          <div>
+            <h2>Open Bookings</h2>
+            <p>Installment and pickup follow-up queue.</p>
+          </div>
+          <span class="status-chip warning">{{ metrics().bookingDueAmount | currency:'PKR':'symbol-narrow':'1.0-0' }} due</span>
+        </div>
+
+        <div class="booking-watchlist">
+          @for (booking of openBookings(); track booking.bookingId) {
+            <article class="booking-watch-item">
+              <div class="booking-watch-head">
+                <div>
+                  <strong>{{ booking.bookingNo }}</strong>
+                  <p>{{ booking.customerName }}</p>
+                </div>
+                <span [class]="statusClass(booking.paymentStatus)">{{ booking.paymentStatus }}</span>
+              </div>
+
+              <div class="booking-watch-meta">
+                <span>Paid {{ booking.paidAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</span>
+                <span>Balance {{ booking.balanceAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</span>
+                <span>{{ booking.dueAt ? ('Due ' + (booking.dueAt | date:'dd MMM')) : 'No due date' }}</span>
+              </div>
+
+              <div class="progress-track">
+                <span class="progress-fill" [style.width.%]="bookingProgress(booking)"></span>
+              </div>
+            </article>
+          } @empty {
+            <div class="empty-note">No open bookings right now. New installments will appear here.</div>
+          }
+        </div>
       </article>
     </div>
 
     <div class="sales-layout">
       <article class="surface-card table-card">
-        <div class="table-toolbar">
-          <div class="table-meta">Showing {{ salesData.items.length }} completed receipts</div>
+        <div class="table-toolbar sales-toolbar">
+          <label class="search-box">
+            <span class="material-symbols-outlined">search</span>
+            <input
+              type="search"
+              placeholder="Search by receipt, customer, item, cashier..."
+              [value]="searchTerm()"
+              (input)="updateSearchTerm($any($event.target).value)"
+            />
+          </label>
+
+          <div class="filter-row">
+            <button class="filter-chip" type="button" [class.is-active]="isFilterActive('all')" (click)="setFilter('all')">
+              All
+            </button>
+            <button
+              class="filter-chip"
+              type="button"
+              [class.is-active]="isFilterActive('completed')"
+              (click)="setFilter('completed')"
+            >
+              Net Sales
+            </button>
+            <button
+              class="filter-chip"
+              type="button"
+              [class.is-active]="isFilterActive('refunded')"
+              (click)="setFilter('refunded')"
+            >
+              Refunded
+            </button>
+            <button
+              class="filter-chip"
+              type="button"
+              [class.is-active]="isFilterActive('fbr-pending')"
+              (click)="setFilter('fbr-pending')"
+            >
+              FBR Pending
+            </button>
+          </div>
+        </div>
+
+        <div class="table-meta">
+          Showing {{ filteredSales().length }} of {{ salesData.items.length }} receipts
         </div>
 
         <div class="table-scroll">
@@ -60,29 +181,39 @@
               <tr>
                 <th>Reference</th>
                 <th>Customer</th>
-                <th>Paid</th>
-                <th>Items</th>
-                <th>Method</th>
+                <th>Net</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>FBR</th>
                 <th>Time</th>
               </tr>
             </thead>
             <tbody>
-              @for (sale of salesData.items; track sale.saleId) {
+              @for (sale of filteredSales(); track sale.saleId) {
                 <tr
                   class="sale-row"
                   [class.is-selected]="selectedSale()?.saleId === sale.saleId"
                   (click)="selectSale(sale.saleId)"
                 >
                   <td class="mono">{{ sale.referenceNo }}</td>
-                  <td>{{ sale.customerName }}</td>
-                  <td class="mono">{{ sale.amount | currency:'PKR':'symbol-narrow':'1.0-0' }}</td>
-                  <td>{{ sale.itemCount }}</td>
+                  <td>
+                    <strong>{{ sale.customerName }}</strong>
+                    <div class="table-subtext">{{ sale.itemCount }} item(s)</div>
+                  </td>
+                  <td class="mono">
+                    {{ sale.netAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}
+                    @if (sale.refundedAmount > 0) {
+                      <div class="table-subtext text-danger">Refund {{ sale.refundedAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+                    }
+                  </td>
+                  <td><span [class]="statusClass(sale.status)">{{ sale.status }}</span></td>
                   <td>{{ sale.paymentMethod }}</td>
+                  <td><span [class]="statusClass(sale.fbrStatus)">{{ sale.fbrStatus }}</span></td>
                   <td>{{ sale.occurredAt | date:'dd MMM, h:mm a' }}</td>
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="6">No completed sales yet. Complete a POS payment to see receipts here.</td>
+                  <td colspan="7">No receipts matched the current filters. Try another search or complete a new POS payment.</td>
                 </tr>
               }
             </tbody>
@@ -98,8 +229,9 @@
               <p>{{ sale.customerName }} | {{ sale.occurredAt | date:'dd MMM yyyy, h:mm a' }}</p>
             </div>
             <div class="receipt-status-stack">
-              <span class="status-chip success">{{ sale.status }}</span>
-              <span class="status-chip neutral">{{ sale.fbrStatus }}</span>
+              <span [class]="statusClass(sale.status)">{{ sale.status }}</span>
+              <span [class]="statusClass(sale.paymentStatus)">{{ sale.paymentStatus }}</span>
+              <span [class]="statusClass(sale.fbrStatus)">{{ sale.fbrStatus }}</span>
             </div>
           </div>
 
@@ -117,14 +249,48 @@
               <strong>{{ sale.receivedAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
             </div>
             <div>
+              <span class="eyebrow">Net Posted</span>
+              <strong>{{ sale.netAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+            <div>
               <span class="eyebrow">FBR Invoice</span>
               <strong>{{ sale.fbrInvoiceNumber || 'Not issued yet' }}</strong>
             </div>
+            <div>
+              <span class="eyebrow">Change Given</span>
+              <strong>{{ sale.changeAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
           </div>
+
+          @if (sale.refundedAmount > 0) {
+            <div class="refund-banner">
+              <div>
+                <strong>Refund processed</strong>
+                <p>
+                  {{ sale.refundedAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}
+                  refunded
+                  @if (sale.refundedAt) {
+                    on {{ sale.refundedAt | date:'dd MMM yyyy, h:mm a' }}
+                  }
+                  @if (sale.refundedBy) {
+                    by {{ sale.refundedBy }}
+                  }
+                </p>
+              </div>
+              <div class="refund-banner-side">
+                <span [class]="sale.inventoryReturned ? 'status-chip success' : 'status-chip neutral'">
+                  {{ sale.inventoryReturned ? 'Inventory Restocked' : 'No Restock' }}
+                </span>
+              </div>
+              @if (sale.refundReason) {
+                <div class="refund-reason">{{ sale.refundReason }}</div>
+              }
+            </div>
+          }
 
           <div class="receipt-actions">
             <div class="receipt-action-buttons">
-              <button class="secondary-button" type="button" [disabled]="loading()" (click)="submitToFbr(sale)">
+              <button class="secondary-button" type="button" [disabled]="loading() || sale.refundedAmount > 0" (click)="submitToFbr(sale)">
                 <span class="material-symbols-outlined">cloud_upload</span>
                 Submit / Refresh FBR Status
               </button>
@@ -141,6 +307,29 @@
               <span class="inline-error">{{ sale.fbrErrorMessage }}</span>
             }
           </div>
+
+          @if (sale.payments.length > 0) {
+            <div class="payment-breakdown">
+              <div class="section-header compact">
+                <div>
+                  <h3>Payment Breakdown</h3>
+                  <p>Tender lines recorded for this receipt.</p>
+                </div>
+              </div>
+
+              <div class="payment-breakdown-list">
+                @for (payment of sale.payments; track payment.method + payment.amount + payment.referenceNo) {
+                  <div class="payment-breakdown-item">
+                    <div>
+                      <strong>{{ payment.method }}</strong>
+                      <div class="table-subtext">{{ payment.referenceNo || 'No reference' }}</div>
+                    </div>
+                    <strong>{{ payment.amount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+                  </div>
+                }
+              </div>
+            </div>
+          }
 
           <div class="receipt-lines">
             @for (line of sale.lines; track line.productId + line.sku) {
@@ -160,7 +349,7 @@
           <div class="totals-panel">
             <div class="summary-row">
               <span>Subtotal</span>
-              <strong>{{ sale.amount - sale.tax + sale.discount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+              <strong>{{ selectedSaleSubtotal() | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
             </div>
             <div class="summary-row text-success">
               <span>Discount</span>
@@ -170,11 +359,57 @@
               <span>Tax</span>
               <strong>{{ sale.tax | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
             </div>
-            <div class="summary-row total-row">
-              <span>Total</span>
+            <div class="summary-row">
+              <span>Gross Ticket</span>
               <strong>{{ sale.amount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
             </div>
+            @if (sale.refundedAmount > 0) {
+              <div class="summary-row text-danger">
+                <span>Refunded</span>
+                <strong>- {{ sale.refundedAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+              </div>
+            }
+            <div class="summary-row total-row">
+              <span>Net Realized</span>
+              <strong>{{ sale.netAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
           </div>
+
+          @if (canProcessRefunds() && sale.refundedAmount <= 0) {
+            <div class="refund-panel">
+              <div class="section-header compact">
+                <div>
+                  <h3>Refund & Return</h3>
+                  <p>Reverse this receipt and optionally restock inventory.</p>
+                </div>
+                <span class="status-chip warning">Owner / Manager</span>
+              </div>
+
+              <label class="toggle-row">
+                <input
+                  type="checkbox"
+                  [checked]="returnToInventory()"
+                  (change)="returnToInventory.set($any($event.target).checked)"
+                />
+                <span>Return physical stock back into inventory</span>
+              </label>
+
+              <label class="field-stack">
+                <span class="eyebrow">Refund Note</span>
+                <textarea
+                  rows="3"
+                  placeholder="Optional note, for example damaged pack, wrong bill, duplicate charge..."
+                  [value]="refundReason()"
+                  (input)="refundReason.set($any($event.target).value)"
+                ></textarea>
+              </label>
+
+              <button class="primary-button wide" type="button" [disabled]="loading()" (click)="refundSale(sale)">
+                <span class="material-symbols-outlined">assignment_return</span>
+                Process Full Refund
+              </button>
+            </div>
+          }
         </aside>
       }
     </div>

@@ -26,9 +26,29 @@
         <div class="branch-avatar">
           <span class="material-symbols-outlined">storefront</span>
         </div>
-        <div>
+        <div class="branch-copy">
           <div class="branch-name">{{ context.branches[0]?.name }}</div>
           <div class="branch-subtitle">{{ context.branches[0]?.warehouseName }}</div>
+          <div class="branch-plan-chip">{{ context.access.planName }}</div>
+        </div>
+      </div>
+
+      <div class="workspace-brief">
+        <div class="workspace-brief-header">
+          <div>
+            <div class="eyebrow">Workspace Brief</div>
+            <strong>{{ context.company.name }}</strong>
+          </div>
+          <span class="workspace-status-dot"></span>
+        </div>
+
+        <div class="workspace-stat-grid">
+          @for (stat of workspaceQuickStats(); track stat.label) {
+            <article class="workspace-stat">
+              <span>{{ stat.label }}</span>
+              <strong>{{ stat.value }}</strong>
+            </article>
+          }
         </div>
       </div>
 
@@ -39,11 +59,24 @@
     }
 
     <nav class="sidebar-nav">
-      @for (item of visibleNavigationItems(); track item.route + item.label) {
-        <a [routerLink]="item.route" routerLinkActive="is-active" class="nav-link" (click)="closeSidebar()">
-          <span class="material-symbols-outlined">{{ item.icon }}</span>
-          <span>{{ item.label }}</span>
-        </a>
+      @if (commerceNavigationItems().length > 0) {
+        <div class="nav-section-label">Commerce</div>
+        @for (item of commerceNavigationItems(); track item.route + item.label) {
+          <a [routerLink]="item.route" routerLinkActive="is-active" class="nav-link" (click)="closeSidebar()">
+            <span class="material-symbols-outlined">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      }
+
+      @if (controlNavigationItems().length > 0) {
+        <div class="nav-section-label">Control Center</div>
+        @for (item of controlNavigationItems(); track item.route + item.label) {
+          <a [routerLink]="item.route" routerLinkActive="is-active" class="nav-link" (click)="closeSidebar()">
+            <span class="material-symbols-outlined">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        }
       }
     </nav>
 
@@ -61,16 +94,33 @@
 
   <div class="shell-content">
     <header class="topbar">
-      <button class="icon-button mobile-nav-button" type="button" aria-label="Toggle navigation" (click)="toggleSidebar()">
-        <span class="material-symbols-outlined">{{ isSidebarOpen() ? 'close' : 'menu' }}</span>
-      </button>
+      <div class="topbar-main">
+        <button class="icon-button mobile-nav-button" type="button" aria-label="Toggle navigation" (click)="toggleSidebar()">
+          <span class="material-symbols-outlined">{{ isSidebarOpen() ? 'close' : 'menu' }}</span>
+        </button>
 
-      <label class="topbar-search">
-        <span class="material-symbols-outlined">search</span>
-        <input type="search" placeholder="Search orders, items..." />
-      </label>
+        @if (workspaceContext(); as context) {
+          <div class="topbar-context">
+            <span class="eyebrow">Live workspace</span>
+            <strong>{{ context.company.name }}</strong>
+            <small>{{ context.access.planName }} • {{ context.access.enabledModules.length }} modules active</small>
+          </div>
+        }
+
+        <label class="topbar-search">
+          <span class="material-symbols-outlined">search</span>
+          <input type="search" placeholder="Search orders, items, modules..." />
+          <span class="search-shortcut">Ctrl K</span>
+        </label>
+      </div>
 
       <div class="topbar-actions">
+        @if (workspaceContext(); as context) {
+          <div class="topbar-chip">
+            <span class="material-symbols-outlined">lan</span>
+            {{ context.branches.length }} branch
+          </div>
+        }
         <button class="icon-button" type="button" (click)="toggleTheme()">
           <span class="material-symbols-outlined">
             {{ themeService.theme() === 'dark' ? 'light_mode' : 'dark_mode' }}
@@ -91,7 +141,7 @@
             <div class="profile-avatar">{{ user.displayName.charAt(0) }}</div>
             <div class="profile-copy">
               <span>{{ user.displayName }}</span>
-              <small>{{ user.role }}</small>
+              <small>{{ user.role }} • Session Live</small>
             </div>
           </div>
         }

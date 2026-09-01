@@ -171,6 +171,81 @@ public sealed class InventoryManagementService(
         return await workspaceQueryService.GetInventoryOverviewAsync(tenantId, cancellationToken);
     }
 
+    public async Task<InventoryOverviewDto> CreateStockTakeAsync(
+        Guid tenantId,
+        Guid userId,
+        SaveStockTakeRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        if (request.CountedQuantity < 0)
+        {
+            throw new InvalidOperationException("Counted quantity cannot be negative.");
+        }
+
+        await workspaceRepository.UpdateWorkspaceSnapshotAsync(snapshot =>
+        {
+            EnsureTenant(snapshot, tenantId);
+
+            var currentUser = ResolveInventoryUser(snapshot, userId);
+            var existing = snapshot.Products.FirstOrDefault(product => product.Id == request.ProductId && !product.IsArchived)
+                ?? throw new InvalidOperationException("The selected product was not found.");
+
+            var normalizedReserved = Math.Min(existing.Reserved, request.CountedQuantity);
+            var variance = request.CountedQuantity - existing.InHand;
+            var updated = ProductStateCalculator.ApplyInventory(existing, request.CountedQuantity, normalizedReserved);
+            var countedAt = DateTimeOffset.Now;
+            var notes = string.IsNullOrWhiteSpace(request.Notes)
+                ? "Cycle count posted from inventory command center."
+                : request.Notes.Trim();
+            var stockTake = new StockTakeSession(
+                Guid.NewGuid(),
+                tenantId,
+                existing.Id,
+                existing.Sku,
+                existing.Name,
+                existing.Warehouse,
+                existing.InHand,
+                request.CountedQuantity,
+                variance,
+                ResolveStockTakeStatus(variance),
+                currentUser.DisplayName,
+                notes,
+                countedAt);
+
+            var adjustments = snapshot.StockAdjustments ?? Array.Empty<StockAdjustmentRecord>();
+            if (variance != 0)
+            {
+                adjustments = adjustments
+                    .Prepend(new StockAdjustmentRecord(
+                        Guid.NewGuid(),
+                        tenantId,
+                        existing.Id,
+                        existing.Name,
+                        variance,
+                        $"Stock take count: {notes}",
+                        currentUser.DisplayName,
+                        countedAt))
+                    .Take(150)
+                    .ToArray();
+            }
+
+            return snapshot with
+            {
+                Products = snapshot.Products
+                    .Select(product => product.Id == request.ProductId ? updated : product)
+                    .OrderBy(item => item.Name)
+                    .ToArray(),
+                StockAdjustments = adjustments,
+                StockTakes = (snapshot.StockTakes ?? Array.Empty<StockTakeSession>())
+                    .Prepend(stockTake)
+                    .Take(100)
+                    .ToArray()
+            };
+        }, cancellationToken);
+
+        return await workspaceQueryService.GetInventoryOverviewAsync(tenantId, cancellationToken);
+    }
+
     public async Task<InventoryImportResultDto> ImportInventoryAsync(
         Guid tenantId,
         InventoryImportFileDto request,
@@ -275,6 +350,20 @@ public sealed class InventoryManagementService(
         }
     }
 
+    private static AppUser ResolveInventoryUser(WorkspaceSnapshot snapshot, Guid userId)
+    {
+        var currentUser = (snapshot.Users ?? Array.Empty<AppUser>()).FirstOrDefault(user => user.Id == userId)
+            ?? (snapshot.AdminUser.Id == userId ? snapshot.AdminUser : null)
+            ?? throw new InvalidOperationException("The current user could not be resolved.");
+
+        if (!WorkspaceRoleAccess.CanManageInventory(currentUser.Role))
+        {
+            throw new InvalidOperationException("The current user is not allowed to manage inventory.");
+        }
+
+        return currentUser;
+    }
+
     private static void ValidateRequest(SaveProductRequestDto request)
     {
         if (string.IsNullOrWhiteSpace(request.Sku) ||
@@ -307,5 +396,15 @@ public sealed class InventoryManagementService(
                 .Take(6)
                 .ToArray())
             .ToUpperInvariant();
+    }
+
+    private static string ResolveStockTakeStatus(int variance)
+    {
+        if (variance == 0)
+        {
+            return "Matched";
+        }
+
+        return variance > 0 ? "Gain Posted" : "Loss Posted";
     }
 }

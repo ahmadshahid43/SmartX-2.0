@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 import { moduleGuard } from './core/module.guard';
 import { DashboardPageComponent } from './features/dashboard/dashboard.page';
+import { ReportsPageComponent } from './features/reports/reports.page';
 import { CustomersPageComponent } from './features/customers/customers.page';
 import { FormBuilderPageComponent } from './features/form-builder/form-builder.page';
 import { InventoryPageComponent } from './features/inventory/inventory.page';
@@ -13,6 +14,7 @@ import { ProcurementPageComponent } from './features/procurement/procurement.pag
 import { SalesPageComponent } from './features/sales/sales.page';
 import { ShellComponent } from './features/shell/shell.component';
 import { UsersPageComponent } from './features/users/users.page';
+import { WarehousePageComponent } from './features/warehouse/warehouse.page';
 
 export const routes: Routes = [
   {
@@ -36,6 +38,12 @@ export const routes: Routes = [
         data: { module: 'dashboard-analytics' },
       },
       {
+        path: 'reports',
+        component: ReportsPageComponent,
+        canActivate: [moduleGuard],
+        data: { module: 'reporting-suite' },
+      },
+      {
         path: 'inventory',
         component: InventoryPageComponent,
         canActivate: [moduleGuard],
@@ -52,6 +60,12 @@ export const routes: Routes = [
         component: ProcurementPageComponent,
         canActivate: [moduleGuard],
         data: { module: 'supplier-management' },
+      },
+      {
+        path: 'warehouse',
+        component: WarehousePageComponent,
+        canActivate: [moduleGuard],
+        data: { module: 'stock-transfer-desk' },
       },
       {
         path: 'operations',

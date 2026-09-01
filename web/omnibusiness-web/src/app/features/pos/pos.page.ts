@@ -1,27 +1,49 @@
 import { CommonModule, CurrencyPipe, DOCUMENT } from '@angular/common';
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { CartLine, PosCheckoutReceipt, PosProduct, PosSummary, PosTerminal } from '../../core/models';
+import {
+  CartLine,
+  CustomerProfile,
+  CreateBookingOrderRequest,
+  PosBookingOrder,
+  PosCheckoutReceipt,
+  PosPaymentLineRequest,
+  PosProduct,
+  PosSummary,
+  PosTerminal,
+  PosWorkflowAction,
+} from '../../core/models';
 import { ReceiptPrintService } from '../../core/receipt-print.service';
 import { WorkspaceApiService } from '../../core/workspace-api.service';
 
-interface HeldOrderLine {
-  productId: string;
-  name: string;
-  quantity: number;
-  unitPrice: number;
-}
-
-interface HeldOrder {
+interface TenderLineDraft {
   id: string;
-  label: string;
-  itemCount: number;
-  total: number;
-  createdAt: string;
-  lines: HeldOrderLine[];
+  method: string;
+  amount: number;
+  referenceNo: string;
 }
 
-const heldOrdersStorageKey = 'omnibusiness.held-orders';
+interface BookingFormDraft {
+  customerName: string;
+  phoneNumber: string;
+  email: string;
+  dueAt: string;
+  notes: string;
+  depositAmount: string;
+  depositMethod: string;
+  referenceNo: string;
+}
+
+const DEFAULT_BOOKING_FORM: BookingFormDraft = {
+  customerName: '',
+  phoneNumber: '',
+  email: '',
+  dueAt: '',
+  notes: '',
+  depositAmount: '',
+  depositMethod: 'Cash',
+  referenceNo: '',
+};
 
 @Component({
   selector: 'app-pos-page',
@@ -35,14 +57,12 @@ export class PosPageComponent {
   private readonly workspaceApi = inject(WorkspaceApiService);
   private readonly receiptPrintService = inject(ReceiptPrintService);
 
-  protected readonly paymentMethods = ['Cash', 'Card', 'Bank Transfer', 'Mixed'];
   protected readonly terminal = signal<PosTerminal | null>(null);
   protected readonly searchTerm = signal('');
   protected readonly selectedCategory = signal('All');
   protected readonly manualEntry = signal('');
   protected readonly manualQuantity = signal(1);
-  protected readonly selectedPaymentMethod = signal('Cash');
-  protected readonly receivedAmount = signal<number | null>(null);
+  protected readonly tenderLines = signal<TenderLineDraft[]>([]);
   protected readonly sendToFbr = signal(true);
   protected readonly autoPrintSlip = signal(false);
   protected readonly busy = signal(false);
@@ -51,20 +71,62 @@ export class PosPageComponent {
   protected readonly manualMessage = signal('');
   protected readonly lastReceipt = signal<PosCheckoutReceipt | null>(null);
   protected readonly tenderOpen = signal(false);
-  protected readonly heldOrders = signal<HeldOrder[]>([]);
+  protected readonly bookingForm = signal<BookingFormDraft>({ ...DEFAULT_BOOKING_FORM });
+  protected readonly bookingDialogOpen = signal(false);
+  protected readonly activeBookingId = signal<string | null>(null);
+  protected readonly bookingCollectionAmount = signal('');
+  protected readonly bookingCollectionMethod = signal('Cash');
+  protected readonly bookingCollectionReference = signal('');
+  protected readonly bookingCollectionNotes = signal('');
+  protected readonly bookingCompletionSendToFbr = signal(true);
+  protected readonly customers = signal<CustomerProfile[]>([]);
+  protected readonly customerPickerOpen = signal(false);
+  protected readonly customerSearch = signal('');
+  protected readonly newCustomerName = signal('');
+  protected readonly newCustomerPhone = signal('');
+  protected readonly newCustomerEmail = signal('');
+  protected readonly standardTaxRatePercent = signal(17);
+  protected readonly cardTaxRatePercent = signal(0);
+  protected readonly taxExempt = signal(false);
 
   protected readonly cart = computed(() => this.terminal()?.cart ?? []);
   protected readonly cartQuantity = computed(() => this.cart().reduce((total, line) => total + line.quantity, 0));
+  protected readonly heldOrders = computed(() => this.terminal()?.heldOrders ?? []);
+  protected readonly bookings = computed(() => this.terminal()?.bookings ?? []);
+  protected readonly paymentMethods = computed(() => this.terminal()?.paymentMethods ?? ['Cash', 'Card', 'Bank Transfer', 'Digital Wallet', 'Mixed']);
+  protected readonly effectiveTaxRatePercent = computed(() => {
+    if (this.taxExempt()) {
+      return 0;
+    }
+
+    return this.tenderMethodLabel() === 'Card'
+      ? this.cardTaxRatePercent()
+      : this.standardTaxRatePercent();
+  });
+
+  protected readonly taxLabel = computed(() => {
+    if (this.taxExempt()) {
+      return 'Tax (exempt)';
+    }
+
+    const rate = this.effectiveTaxRatePercent();
+    return this.tenderMethodLabel() === 'Card' ? `Card tax (${rate}%)` : `Tax (${rate}%)`;
+  });
+
   protected readonly summary = computed<PosSummary>(() => {
-    return (
-      this.terminal()?.summary ?? {
-        itemCount: 0,
-        subtotal: 0,
-        discount: 0,
-        tax: 0,
-        total: 0,
-      }
-    );
+    const base = this.terminal()?.summary ?? {
+      itemCount: 0,
+      subtotal: 0,
+      discount: 0,
+      tax: 0,
+      total: 0,
+    };
+    const taxableAmount = Math.max(base.subtotal - base.discount, 0);
+    const tax = this.taxExempt()
+      ? 0
+      : Math.round(taxableAmount * this.effectiveTaxRatePercent()) / 100;
+
+    return { ...base, tax, total: taxableAmount + tax };
   });
 
   protected readonly filteredProducts = computed(() => {
@@ -92,6 +154,19 @@ export class PosPageComponent {
     return products.filter((product) => product.isFavorite).slice(0, 6);
   });
 
+  protected readonly filteredCustomers = computed(() => {
+    const query = this.customerSearch().trim().toLowerCase();
+    return this.customers()
+      .filter((customer) => !customer.isWalkIn)
+      .filter((customer) =>
+        query.length === 0 ||
+        customer.name.toLowerCase().includes(query) ||
+        (customer.phoneNumber ?? '').toLowerCase().includes(query) ||
+        (customer.email ?? '').toLowerCase().includes(query),
+      )
+      .slice(0, 8);
+  });
+
   protected readonly manualMatches = computed(() => {
     const data = this.terminal();
     const query = this.manualEntry().trim().toLowerCase();
@@ -105,15 +180,28 @@ export class PosPageComponent {
       .slice(0, 6);
   });
 
-  protected readonly changeDue = computed(() => {
-    const received = this.receivedAmount() ?? this.summary().total;
-    return Math.max(received - this.summary().total, 0);
+  protected readonly tenderCollectedAmount = computed(() =>
+    this.tenderLines().reduce((total, line) => total + (Number.isFinite(line.amount) ? line.amount : 0), 0),
+  );
+
+  protected readonly tenderMethodLabel = computed(() => {
+    const methods = Array.from(
+      new Set(
+        this.tenderLines()
+          .filter((line) => line.amount > 0)
+          .map((line) => line.method),
+      ),
+    );
+
+    if (methods.length === 0) {
+      return this.paymentMethods()[0] ?? 'Cash';
+    }
+
+    return methods.length === 1 ? methods[0] : 'Mixed';
   });
 
-  protected readonly remainingBalance = computed(() => {
-    const received = this.receivedAmount() ?? 0;
-    return Math.max(this.summary().total - received, 0);
-  });
+  protected readonly changeDue = computed(() => Math.max(this.tenderCollectedAmount() - this.summary().total, 0));
+  protected readonly remainingBalance = computed(() => Math.max(this.summary().total - this.tenderCollectedAmount(), 0));
 
   protected readonly quickCashAmounts = computed(() => {
     const total = this.summary().total;
@@ -126,8 +214,22 @@ export class PosPageComponent {
     ).filter((amount) => amount > 0);
   });
 
+  protected readonly selectedBooking = computed(() =>
+    this.bookings().find((booking) => booking.id === this.activeBookingId()) ?? null,
+  );
+
+  protected readonly bookingCollectionRemaining = computed(() => {
+    const booking = this.selectedBooking();
+    if (!booking) {
+      return 0;
+    }
+
+    const amount = Number(this.bookingCollectionAmount());
+    const normalizedAmount = Number.isFinite(amount) ? amount : 0;
+    return Math.max(booking.balanceAmount - normalizedAmount, 0);
+  });
+
   constructor() {
-    this.loadHeldOrders();
     void this.loadTerminal();
   }
 
@@ -188,21 +290,61 @@ export class PosPageComponent {
     this.manualQuantity.set(Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1);
   }
 
-  protected setPaymentMethod(method: string): void {
-    this.selectedPaymentMethod.set(method);
+  protected setStandardTaxRate(value: string): void {
+    this.standardTaxRatePercent.set(this.normalizeTaxRate(value));
   }
 
-  protected setReceivedAmount(value: string): void {
-    const parsed = Number(value);
-    this.receivedAmount.set(Number.isFinite(parsed) && parsed >= 0 ? parsed : null);
+  protected setCardTaxRate(value: string): void {
+    this.cardTaxRatePercent.set(this.normalizeTaxRate(value));
   }
 
-  protected setSendToFbr(value: boolean): void {
-    this.sendToFbr.set(value);
+  protected setTaxExempt(value: boolean): void {
+    this.taxExempt.set(value);
   }
 
-  protected setAutoPrintSlip(value: boolean): void {
-    this.autoPrintSlip.set(value);
+  protected toggleCustomerPicker(): void {
+    this.customerPickerOpen.update((isOpen) => !isOpen);
+  }
+
+  protected setCustomerSearch(value: string): void {
+    this.customerSearch.set(value);
+  }
+
+  protected setNewCustomerField(field: 'name' | 'phone' | 'email', value: string): void {
+    if (field === 'name') {
+      this.newCustomerName.set(value);
+      return;
+    }
+
+    if (field === 'phone') {
+      this.newCustomerPhone.set(value);
+      return;
+    }
+
+    this.newCustomerEmail.set(value);
+  }
+
+  protected async chooseWalkInCustomer(): Promise<void> {
+    await this.selectCustomer({ customerId: null });
+  }
+
+  protected async chooseExistingCustomer(customer: CustomerProfile): Promise<void> {
+    await this.selectCustomer({ customerId: customer.customerId });
+  }
+
+  protected async createAndSelectCustomer(): Promise<void> {
+    const customerName = this.newCustomerName().trim();
+    if (!customerName) {
+      this.errorMessage.set('New customer ke liye naam zaroori hai.');
+      return;
+    }
+
+    await this.selectCustomer({
+      customerId: null,
+      customerName,
+      phoneNumber: this.newCustomerPhone().trim() || null,
+      email: this.newCustomerEmail().trim() || null,
+    });
   }
 
   protected addProduct(product: PosProduct): void {
@@ -258,7 +400,7 @@ export class PosPageComponent {
 
     try {
       const terminal = await firstValueFrom(this.workspaceApi.removeCartLine(productId));
-      this.applyTerminalState(terminal, 'sync-total');
+      this.applyTerminalState(terminal, 'sync-tender');
     } catch (error) {
       this.errorMessage.set(this.extractError(error, 'Cart item remove nahi ho saka.'));
     } finally {
@@ -278,18 +420,38 @@ export class PosPageComponent {
     return `${Math.max(product.inHand - reservedInCart, 0)} in stock`;
   }
 
-  protected heldPreview(order: HeldOrder): string {
+  protected heldPreviewLine(orderId: string): string {
+    const order = this.heldOrders().find((item) => item.id === orderId);
+    if (!order) {
+      return '';
+    }
+
     return order.lines
       .slice(0, 2)
       .map((line) => `${line.name} x${line.quantity}`)
       .join(' • ');
   }
 
-  protected heldTimestamp(order: HeldOrder): string {
-    return new Date(order.createdAt).toLocaleTimeString('en-PK', {
+  protected heldTimestamp(value: string): string {
+    return new Date(value).toLocaleTimeString('en-PK', {
       hour: 'numeric',
       minute: '2-digit',
     });
+  }
+
+  protected bookingPreview(booking: PosBookingOrder): string {
+    return booking.lines
+      .slice(0, 2)
+      .map((line) => `${line.name} x${line.quantity}`)
+      .join(' • ');
+  }
+
+  protected bookingProgress(booking: PosBookingOrder): number {
+    if (booking.totalAmount <= 0) {
+      return 0;
+    }
+
+    return Math.min(Math.round((booking.paidAmount / booking.totalAmount) * 100), 100);
   }
 
   protected openTender(): void {
@@ -298,7 +460,10 @@ export class PosPageComponent {
       return;
     }
 
-    this.receivedAmount.update((current) => current ?? this.summary().total);
+    if (this.tenderLines().length === 0 || Math.abs(this.tenderCollectedAmount() - this.summary().total) > 0.01) {
+      this.resetTenderLines(this.tenderMethodLabel(), this.summary().total);
+    }
+
     this.tenderOpen.set(true);
   }
 
@@ -306,51 +471,84 @@ export class PosPageComponent {
     this.tenderOpen.set(false);
   }
 
-  protected applyQuickCashAmount(amount: number): void {
-    this.receivedAmount.set(amount);
+  protected chooseTenderPreset(method: string): void {
+    if (method === 'Mixed') {
+      const total = this.summary().total;
+      this.tenderLines.set([
+        this.createTenderLine('Cash', total),
+        this.createTenderLine('Card', 0),
+      ]);
+      return;
+    }
+
+    this.resetTenderLines(method, this.summary().total);
   }
 
-  protected async holdCurrentSale(silent = false): Promise<void> {
+  protected addTenderLine(): void {
+    const fallbackMethod = this.paymentMethods().find((method) => method !== 'Mixed') ?? 'Cash';
+    this.tenderLines.update((lines) => [...lines, this.createTenderLine(fallbackMethod, 0)]);
+  }
+
+  protected removeTenderLine(lineId: string): void {
+    this.tenderLines.update((lines) => {
+      if (lines.length <= 1) {
+        return lines;
+      }
+
+      return lines.filter((line) => line.id !== lineId);
+    });
+  }
+
+  protected setTenderLineMethod(lineId: string, method: string): void {
+    if (method === 'Mixed') {
+      return;
+    }
+
+    this.tenderLines.update((lines) =>
+      lines.map((line) => (line.id === lineId ? { ...line, method } : line)),
+    );
+  }
+
+  protected setTenderLineAmount(lineId: string, value: string): void {
+    const parsed = Number(value);
+    const amount = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+    this.tenderLines.update((lines) =>
+      lines.map((line) => (line.id === lineId ? { ...line, amount } : line)),
+    );
+  }
+
+  protected setTenderLineReference(lineId: string, value: string): void {
+    this.tenderLines.update((lines) =>
+      lines.map((line) => (line.id === lineId ? { ...line, referenceNo: value } : line)),
+    );
+  }
+
+  protected setReceivedAmount(value: string): void {
+    const lineId = this.tenderLines()[0]?.id;
+    if (!lineId) {
+      this.resetTenderLines(this.paymentMethods()[0] ?? 'Cash', 0);
+      return;
+    }
+
+    this.setTenderLineAmount(lineId, value);
+  }
+
+  protected applyQuickCashAmount(amount: number): void {
+    this.resetTenderLines('Cash', amount);
+  }
+
+  protected async holdCurrentSale(): Promise<void> {
     if (this.busy()) {
       return;
     }
-
-    if (this.summary().itemCount === 0) {
-      if (!silent) {
-        this.paymentMessage.set('Hold karne ke liye current cart me items hone chahiye.');
-      }
-      return;
-    }
-
-    const snapshot: HeldOrder = {
-      id: this.document.defaultView?.crypto?.randomUUID?.() ?? `${Date.now()}`,
-      label: this.upcomingTicketLabel(),
-      itemCount: this.summary().itemCount,
-      total: this.summary().total,
-      createdAt: new Date().toISOString(),
-      lines: this.cart().map((line) => ({
-        productId: line.productId,
-        name: line.name,
-        quantity: line.quantity,
-        unitPrice: line.unitPrice,
-      })),
-    };
 
     this.busy.set(true);
     this.errorMessage.set('');
 
     try {
-      await this.clearCurrentCart('', true);
-      this.heldOrders.set([snapshot, ...this.heldOrders()].slice(0, 8));
-      this.persistHeldOrders();
+      const action = await firstValueFrom(this.workspaceApi.holdCurrentSale({ notes: null }));
+      this.applyWorkflowAction(action);
       this.tenderOpen.set(false);
-      this.searchTerm.set('');
-      this.selectedCategory.set('All');
-      this.receivedAmount.set(null);
-
-      if (!silent) {
-        this.paymentMessage.set(`${snapshot.label} hold par save ho gayi. Aap next customer start kar sakte hain.`);
-      }
     } catch (error) {
       this.errorMessage.set(this.extractError(error, 'Sale hold par save nahi ho saki.'));
     } finally {
@@ -363,32 +561,17 @@ export class PosPageComponent {
       return;
     }
 
-    const order = this.heldOrders().find((heldOrder) => heldOrder.id === orderId);
-    if (!order) {
-      return;
-    }
-
     if (this.summary().itemCount > 0) {
-      await this.holdCurrentSale(true);
+      await this.holdCurrentSale();
     }
 
     this.busy.set(true);
     this.errorMessage.set('');
-    this.paymentMessage.set('');
 
     try {
-      await this.clearCurrentCart('', true);
-
-      for (const line of order.lines) {
-        const terminal = await firstValueFrom(this.workspaceApi.saveCartLine(line.productId, line.quantity));
-        this.applyTerminalState(terminal, 'sync-total');
-      }
-
-      this.heldOrders.set(this.heldOrders().filter((heldOrder) => heldOrder.id !== orderId));
-      this.persistHeldOrders();
-      this.receivedAmount.set(this.summary().total);
+      const action = await firstValueFrom(this.workspaceApi.resumeHeldOrder(orderId));
+      this.applyWorkflowAction(action);
       this.tenderOpen.set(false);
-      this.paymentMessage.set(`${order.label} resume ho gayi. Cashier sale continue kar sakta hai.`);
       this.focusProductSearch();
     } catch (error) {
       this.errorMessage.set(this.extractError(error, 'Held sale resume nahi ho saki.'));
@@ -420,6 +603,124 @@ export class PosPageComponent {
     }
   }
 
+  protected setBookingField(field: keyof BookingFormDraft, value: string): void {
+    this.bookingForm.update((form) => ({
+      ...form,
+      [field]: value,
+    }));
+  }
+
+  protected async createBooking(): Promise<void> {
+    if (this.busy()) {
+      return;
+    }
+
+    this.busy.set(true);
+    this.errorMessage.set('');
+
+    const form = this.bookingForm();
+    const depositAmount = Number(form.depositAmount);
+    const payments: PosPaymentLineRequest[] =
+      Number.isFinite(depositAmount) && depositAmount > 0
+        ? [
+            {
+              method: form.depositMethod || 'Cash',
+              amount: depositAmount,
+              referenceNo: form.referenceNo.trim() || null,
+            },
+          ]
+        : [];
+    const request: CreateBookingOrderRequest = {
+      customerName: form.customerName.trim(),
+      phoneNumber: form.phoneNumber.trim() || null,
+      email: form.email.trim() || null,
+      dueAt: form.dueAt || null,
+      notes: form.notes.trim() || null,
+      payments,
+    };
+
+    try {
+      const action = await firstValueFrom(this.workspaceApi.createBooking(request));
+      this.applyWorkflowAction(action);
+      this.bookingForm.set({ ...DEFAULT_BOOKING_FORM });
+      this.tenderOpen.set(false);
+    } catch (error) {
+      this.errorMessage.set(this.extractError(error, 'Booking create nahi ho saki.'));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  protected openBookingDialog(booking: PosBookingOrder): void {
+    this.activeBookingId.set(booking.id);
+    this.bookingCollectionAmount.set(booking.balanceAmount > 0 ? `${booking.balanceAmount}` : '0');
+    this.bookingCollectionMethod.set('Cash');
+    this.bookingCollectionReference.set('');
+    this.bookingCollectionNotes.set('');
+    this.bookingCompletionSendToFbr.set(true);
+    this.bookingDialogOpen.set(true);
+  }
+
+  protected closeBookingDialog(): void {
+    this.bookingDialogOpen.set(false);
+    this.activeBookingId.set(null);
+  }
+
+  protected async collectBookingPayment(): Promise<void> {
+    const booking = this.selectedBooking();
+    if (!booking || this.busy()) {
+      return;
+    }
+
+    this.busy.set(true);
+    this.errorMessage.set('');
+
+    try {
+      const amount = Number(this.bookingCollectionAmount());
+      const action = await firstValueFrom(
+        this.workspaceApi.collectBookingPayment(booking.id, {
+          amount,
+          paymentMethod: this.bookingCollectionMethod(),
+          referenceNo: this.bookingCollectionReference().trim() || null,
+          notes: this.bookingCollectionNotes().trim() || null,
+        }),
+      );
+      this.applyWorkflowAction(action);
+      this.openBookingDialog(action.booking ?? booking);
+    } catch (error) {
+      this.errorMessage.set(this.extractError(error, 'Installment collect nahi ho saki.'));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  protected async completeBooking(): Promise<void> {
+    const booking = this.selectedBooking();
+    if (!booking || this.busy()) {
+      return;
+    }
+
+    this.busy.set(true);
+    this.errorMessage.set('');
+
+    try {
+      const action = await firstValueFrom(
+        this.workspaceApi.completeBooking(booking.id, { sendToFbr: this.bookingCompletionSendToFbr() }),
+      );
+      this.applyWorkflowAction(action);
+
+      if (action.receipt && this.autoPrintSlip()) {
+        this.receiptPrintService.printSlip(action.receipt);
+      }
+
+      this.closeBookingDialog();
+    } catch (error) {
+      this.errorMessage.set(this.extractError(error, 'Booked order complete nahi ho saka.'));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
   protected async completePayment(): Promise<void> {
     if (this.summary().itemCount === 0) {
       this.paymentMessage.set('Add at least one item to the cart before completing payment.');
@@ -428,14 +729,17 @@ export class PosPageComponent {
 
     this.busy.set(true);
     this.errorMessage.set('');
-    const receivedAmount = this.receivedAmount() ?? this.summary().total;
 
     try {
+      const payments = this.toPaymentRequests();
       const receipt = await firstValueFrom(
         this.workspaceApi.checkout({
-          paymentMethod: this.selectedPaymentMethod(),
-          receivedAmount,
+          paymentMethod: this.tenderMethodLabel(),
+          receivedAmount: this.tenderCollectedAmount(),
           sendToFbr: this.sendToFbr(),
+          payments,
+          taxRatePercent: this.effectiveTaxRatePercent(),
+          taxExempt: this.taxExempt(),
         }),
       );
 
@@ -448,11 +752,9 @@ export class PosPageComponent {
         this.receiptPrintService.printSlip(receipt);
       }
 
-      this.receivedAmount.set(null);
       this.tenderOpen.set(false);
-
       const terminal = await firstValueFrom(this.workspaceApi.getPosTerminal());
-      this.terminal.set(terminal);
+      this.applyTerminalState(terminal, 'reset-tender');
     } catch (error) {
       this.errorMessage.set(this.extractError(error, 'Payment complete nahi ho saka.'));
     } finally {
@@ -482,19 +784,44 @@ export class PosPageComponent {
     this.paymentMessage.set(`Receipt slip ${receipt.referenceNo} print ke liye tayyar hai.`);
   }
 
-  protected upcomingTicketLabel(): string {
-    return `Hold ${String(this.heldOrders().length + 1).padStart(2, '0')}`;
-  }
-
   private async loadTerminal(): Promise<void> {
     this.busy.set(true);
     this.errorMessage.set('');
 
     try {
-      const terminal = await firstValueFrom(this.workspaceApi.getPosTerminal());
-      this.applyTerminalState(terminal, 'preserve-received');
+      const [terminal, customerHub] = await Promise.all([
+        firstValueFrom(this.workspaceApi.getPosTerminal()),
+        firstValueFrom(this.workspaceApi.getCustomerHub()),
+      ]);
+      this.customers.set(customerHub.customers);
+      this.applyTerminalState(terminal, 'reset-tender');
     } catch {
       this.errorMessage.set('POS terminal load nahi ho saka. API run aur login session check karein.');
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  private async selectCustomer(request: { customerId: string | null; customerName?: string | null; phoneNumber?: string | null; email?: string | null }): Promise<void> {
+    if (this.busy()) {
+      return;
+    }
+
+    this.busy.set(true);
+    this.errorMessage.set('');
+
+    try {
+      const terminal = await firstValueFrom(this.workspaceApi.selectPosCustomer(request));
+      this.applyTerminalState(terminal, 'sync-tender');
+      this.customerPickerOpen.set(false);
+      this.customerSearch.set('');
+      this.newCustomerName.set('');
+      this.newCustomerPhone.set('');
+      this.newCustomerEmail.set('');
+      const customerHub = await firstValueFrom(this.workspaceApi.getCustomerHub());
+      this.customers.set(customerHub.customers);
+    } catch (error) {
+      this.errorMessage.set(this.extractError(error, 'Customer select nahi ho saka.'));
     } finally {
       this.busy.set(false);
     }
@@ -511,7 +838,7 @@ export class PosPageComponent {
 
     try {
       const terminal = await firstValueFrom(this.workspaceApi.saveCartLine(productId, quantity));
-      this.applyTerminalState(terminal, 'sync-total');
+      this.applyTerminalState(terminal, 'sync-tender');
     } catch (error) {
       this.errorMessage.set(this.extractError(error, 'Cart update nahi ho saka.'));
     } finally {
@@ -519,21 +846,67 @@ export class PosPageComponent {
     }
   }
 
-  private applyTerminalState(terminal: PosTerminal, mode: 'preserve-received' | 'sync-total'): void {
+  private applyWorkflowAction(action: PosWorkflowAction): void {
+    this.paymentMessage.set(action.message);
+    this.applyTerminalState(action.terminal, 'reset-tender');
+
+    if (action.receipt) {
+      this.lastReceipt.set(action.receipt);
+    }
+  }
+
+  private applyTerminalState(terminal: PosTerminal, mode: 'reset-tender' | 'sync-tender'): void {
     this.terminal.set(terminal);
 
-    if (mode === 'preserve-received') {
-      this.receivedAmount.update((current) => current ?? (terminal.summary.total > 0 ? terminal.summary.total : null));
+    if (terminal.summary.total <= 0) {
+      this.tenderLines.set([]);
       return;
     }
 
-    this.receivedAmount.set(terminal.summary.total > 0 ? terminal.summary.total : null);
+    const preferredMethod = this.tenderLines()[0]?.method ?? terminal.paymentMethods[0] ?? 'Cash';
+    if (mode === 'sync-tender' && this.tenderLines().length > 0) {
+      this.resetTenderLines(preferredMethod, terminal.summary.total);
+      return;
+    }
+
+    this.resetTenderLines(preferredMethod, terminal.summary.total);
   }
 
-  private async clearCurrentCart(successMessage: string, silent = false): Promise<void> {
+  private resetTenderLines(method: string, amount: number): void {
+    this.tenderLines.set([this.createTenderLine(method === 'Mixed' ? 'Cash' : method, amount)]);
+  }
+
+  private normalizeTaxRate(value: string): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.min(Math.max(parsed, 0), 100) : 0;
+  }
+
+  private createTenderLine(method: string, amount: number): TenderLineDraft {
+    const identifier =
+      this.document.defaultView?.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.round(Math.random() * 1000)}`;
+
+    return {
+      id: identifier,
+      method,
+      amount,
+      referenceNo: '',
+    };
+  }
+
+  private toPaymentRequests(): PosPaymentLineRequest[] {
+    return this.tenderLines()
+      .filter((line) => line.amount > 0)
+      .map((line) => ({
+        method: line.method,
+        amount: line.amount,
+        referenceNo: line.referenceNo.trim() || null,
+      }));
+  }
+
+  private async clearCurrentCart(successMessage: string): Promise<void> {
     const lines = [...this.cart()];
     if (lines.length === 0) {
-      if (successMessage && !silent) {
+      if (successMessage) {
         this.paymentMessage.set(successMessage);
       }
       return;
@@ -541,15 +914,14 @@ export class PosPageComponent {
 
     for (const line of lines) {
       const terminal = await firstValueFrom(this.workspaceApi.removeCartLine(line.productId));
-      this.applyTerminalState(terminal, 'sync-total');
+      this.applyTerminalState(terminal, 'sync-tender');
     }
 
-    this.receivedAmount.set(null);
     this.manualEntry.set('');
     this.manualQuantity.set(1);
     this.manualMessage.set('');
 
-    if (successMessage && !silent) {
+    if (successMessage) {
       this.paymentMessage.set(successMessage);
     }
   }
@@ -566,25 +938,6 @@ export class PosPageComponent {
     const searchInput = this.document.querySelector<HTMLInputElement>('.pos-search-input');
     searchInput?.focus();
     searchInput?.select();
-  }
-
-  private loadHeldOrders(): void {
-    try {
-      const rawValue = this.document.defaultView?.localStorage.getItem(heldOrdersStorageKey);
-      if (!rawValue) {
-        this.heldOrders.set([]);
-        return;
-      }
-
-      const parsedValue = JSON.parse(rawValue) as HeldOrder[];
-      this.heldOrders.set(Array.isArray(parsedValue) ? parsedValue : []);
-    } catch {
-      this.heldOrders.set([]);
-    }
-  }
-
-  private persistHeldOrders(): void {
-    this.document.defaultView?.localStorage.setItem(heldOrdersStorageKey, JSON.stringify(this.heldOrders()));
   }
 
   private extractError(error: unknown, fallback: string): string {

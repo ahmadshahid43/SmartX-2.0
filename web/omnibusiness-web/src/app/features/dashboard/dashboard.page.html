@@ -1,20 +1,61 @@
 @if (dashboard(); as data) {
-  <section class="page-stack">
-    <div class="page-header with-actions">
-      <div>
+  <section class="dashboard-page page-stack">
+    <header class="dashboard-hero surface-card">
+      <div class="hero-copy">
+        <p class="eyebrow">Executive Control</p>
         <h1>Welcome back, {{ authService.currentUser()?.displayName ?? 'Team' }}</h1>
-        <p>Here is the overview of your business today.</p>
+        <p>
+          {{ currentDateLabel }} ka business pulse yahan hai. Sales, inventory pressure, cashier flow,
+          aur branch performance ko ek command-center view mein monitor karein.
+        </p>
       </div>
 
-      <button class="secondary-button compact-button">
-        <span class="material-symbols-outlined">calendar_month</span>
-        {{ currentDateLabel }}
-      </button>
-    </div>
+      <div class="hero-actions">
+        <button class="secondary-button compact-button" type="button">
+          <span class="material-symbols-outlined">calendar_month</span>
+          {{ currentDateLabel }}
+        </button>
+        <a class="primary-button compact-button" routerLink="/pos">
+          <span class="material-symbols-outlined">point_of_sale</span>
+          Open POS
+        </a>
+        <a class="secondary-button compact-button" routerLink="/inventory">
+          <span class="material-symbols-outlined">inventory_2</span>
+          Review Inventory
+        </a>
+      </div>
+    </header>
 
-    <div class="metric-grid">
+    <section class="hero-insights">
+      <article class="hero-insight-card surface-card">
+        <span class="insight-label">Completion Rate</span>
+        <strong>{{ completionRate() }}%</strong>
+        <p>{{ completedTransactionsCount() }} successful checkouts from recent activity.</p>
+      </article>
+
+      <article class="hero-insight-card surface-card">
+        <span class="insight-label">Best Branch</span>
+        <strong>{{ bestPerformingBranch()?.branchName ?? 'No branch data' }}</strong>
+        <p>
+          {{ bestPerformingBranch()?.percentage ?? 0 }}% contribution across tracked branch performance.
+        </p>
+      </article>
+
+      <article class="hero-insight-card surface-card accent">
+        <span class="insight-label">Top Seller Revenue</span>
+        <strong>{{ topSellingRevenue() | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+        <p>Fast-moving SKUs are driving the current retail mix.</p>
+      </article>
+    </section>
+
+    <div class="metric-grid enterprise-metrics">
       <article class="metric-card surface-card">
-        <div class="metric-label">{{ data.sales.label }}</div>
+        <div class="metric-headline">
+          <div class="metric-icon">
+            <span class="material-symbols-outlined">payments</span>
+          </div>
+          <span class="metric-label">{{ data.sales.label }}</span>
+        </div>
         <div class="metric-value">{{ data.sales.value | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
         <div class="metric-delta" [class.positive]="data.sales.deltaDirection === 'up'" [class.negative]="data.sales.deltaDirection === 'down'">
           {{ data.sales.deltaPercentage }}% vs yesterday
@@ -22,7 +63,12 @@
       </article>
 
       <article class="metric-card surface-card">
-        <div class="metric-label">{{ data.purchases.label }}</div>
+        <div class="metric-headline">
+          <div class="metric-icon">
+            <span class="material-symbols-outlined">local_shipping</span>
+          </div>
+          <span class="metric-label">{{ data.purchases.label }}</span>
+        </div>
         <div class="metric-value">{{ data.purchases.value | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
         <div class="metric-delta" [class.positive]="data.purchases.deltaDirection === 'up'" [class.negative]="data.purchases.deltaDirection === 'down'">
           {{ data.purchases.deltaPercentage }}% vs yesterday
@@ -30,7 +76,12 @@
       </article>
 
       <article class="metric-card surface-card">
-        <div class="metric-label">{{ data.grossProfit.label }}</div>
+        <div class="metric-headline">
+          <div class="metric-icon">
+            <span class="material-symbols-outlined">monitoring</span>
+          </div>
+          <span class="metric-label">{{ data.grossProfit.label }}</span>
+        </div>
         <div class="metric-value">{{ data.grossProfit.value | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
         <div class="metric-delta" [class.positive]="data.grossProfit.deltaDirection === 'up'" [class.negative]="data.grossProfit.deltaDirection === 'down'">
           {{ data.grossProfit.deltaPercentage }}% vs yesterday
@@ -38,21 +89,30 @@
       </article>
 
       <article class="metric-card surface-card alert-card">
-        <div class="metric-label">{{ data.lowStock.label }}</div>
-        <div class="alert-row">
-          <div class="metric-value">{{ data.lowStock.count }}</div>
-          <button class="text-button">{{ data.lowStock.actionLabel }}</button>
+        <div class="metric-headline">
+          <div class="metric-icon warning">
+            <span class="material-symbols-outlined">warning</span>
+          </div>
+          <span class="metric-label">{{ data.lowStock.label }}</span>
+        </div>
+        <div class="metric-value">{{ data.lowStock.count }}</div>
+        <div class="metric-delta warning-copy">
+          {{ data.lowStock.actionLabel }} across active inventory categories
         </div>
       </article>
     </div>
 
-    <div class="dashboard-grid">
-      <article class="surface-card chart-card">
+    <div class="enterprise-grid">
+      <article class="surface-card chart-panel">
         <div class="section-header">
-          <h2>Sales Trend</h2>
-          <button class="icon-button" type="button">
-            <span class="material-symbols-outlined">more_vert</span>
-          </button>
+          <div>
+            <p class="eyebrow">Revenue Flow</p>
+            <h2>Sales trend snapshot</h2>
+          </div>
+          <div class="chart-status">
+            <span class="status-chip success">{{ completionRate() }}% complete</span>
+            <span class="status-chip neutral">{{ pendingTransactionsCount() }} pending review</span>
+          </div>
         </div>
 
         <svg class="trend-chart" viewBox="0 0 780 280" preserveAspectRatio="none">
@@ -67,36 +127,102 @@
             <span>{{ point.label }}</span>
           }
         </div>
+
+        <div class="trend-summary-strip">
+          <article>
+            <span>Average ticket</span>
+            <strong>{{ averageTicketValue() | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+          </article>
+          <article>
+            <span>Completed sales</span>
+            <strong>{{ completedTransactionsCount() }}</strong>
+          </article>
+          <article>
+            <span>Watchlist</span>
+            <strong>{{ data.lowStock.count }} low-stock SKU(s)</strong>
+          </article>
+        </div>
       </article>
 
-      <article class="surface-card compact-list-card">
-        <div class="section-header">
-          <h2>Top Selling</h2>
-          <button class="icon-button" type="button">
-            <span class="material-symbols-outlined">filter_alt</span>
-          </button>
-        </div>
-
-        <div class="list-stack">
-          @for (item of data.topSelling; track item.name) {
-            <div class="list-item">
-              <div class="list-icon">
-                <span class="material-symbols-outlined">inventory</span>
-              </div>
-              <div class="list-copy">
-                <strong>{{ item.name }}</strong>
-                <span>{{ item.units }} Units</span>
-              </div>
-              <div class="mono">{{ item.revenue | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+      <aside class="dashboard-side-stack">
+        <article class="surface-card focus-panel">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Today's Focus</p>
+              <h2>Operational queue</h2>
             </div>
-          }
-        </div>
-      </article>
+          </div>
 
-      <article class="surface-card table-card">
+          <div class="focus-list">
+            <div class="focus-item">
+              <span class="focus-dot danger"></span>
+              <div>
+                <strong>{{ data.lowStock.count }} low-stock alerts</strong>
+                <p>Inventory reorder and branch refill actions recommended.</p>
+              </div>
+            </div>
+
+            <div class="focus-item">
+              <span class="focus-dot primary"></span>
+              <div>
+                <strong>{{ pendingTransactionsCount() }} transaction(s) need attention</strong>
+                <p>Pending or partially closed receipts can be reviewed from Sales History.</p>
+              </div>
+            </div>
+
+            <div class="focus-item">
+              <span class="focus-dot success"></span>
+              <div>
+                <strong>{{ bestPerformingBranch()?.branchName ?? 'Branch data pending' }}</strong>
+                <p>Current best-performing branch in the live performance mix.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="focus-actions">
+            <a class="primary-button wide" routerLink="/sales">
+              <span class="material-symbols-outlined">receipt_long</span>
+              Open Sales Desk
+            </a>
+            <a class="secondary-button wide" routerLink="/plans">
+              <span class="material-symbols-outlined">tune</span>
+              Review Plans & Modules
+            </a>
+          </div>
+        </article>
+
+        <article class="surface-card compact-list-card">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Best Sellers</p>
+              <h2>Fast movers</h2>
+            </div>
+          </div>
+
+          <div class="list-stack">
+            @for (item of data.topSelling; track item.name) {
+              <div class="list-item">
+                <div class="list-icon">
+                  <span class="material-symbols-outlined">inventory</span>
+                </div>
+                <div class="list-copy">
+                  <strong>{{ item.name }}</strong>
+                  <span>{{ item.units }} Units</span>
+                </div>
+                <div class="mono">{{ item.revenue | currency:'PKR':'symbol-narrow':'1.0-0' }}</div>
+              </div>
+            }
+          </div>
+        </article>
+      </aside>
+
+      <article class="surface-card table-card transaction-panel">
         <div class="section-header">
-          <h2>Recent Transactions</h2>
-          <button class="secondary-button">Export</button>
+          <div>
+            <p class="eyebrow">Activity Log</p>
+            <h2>Recent transactions</h2>
+          </div>
+          <a class="secondary-button compact-button" routerLink="/sales">Open full history</a>
         </div>
 
         <div class="table-scroll">
@@ -129,9 +255,15 @@
         </div>
       </article>
 
-      <article class="surface-card branch-card-grid">
+      <article class="surface-card branch-panel">
         <div class="section-header">
-          <h2>Branch Performance</h2>
+          <div>
+            <p class="eyebrow">Branch Mix</p>
+            <h2>Performance leaderboard</h2>
+          </div>
+          @if (bestPerformingBranch(); as branch) {
+            <span class="status-chip success">{{ branch.branchName }} leads</span>
+          }
         </div>
 
         <div class="branch-stack">

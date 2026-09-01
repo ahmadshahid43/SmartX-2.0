@@ -50,6 +50,97 @@ public sealed class PosController(
         return Ok(terminal);
     }
 
+    [HttpPut("customer")]
+    [ProducesResponseType<PosTerminalDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<PosTerminalDto>> SelectCustomerAsync(
+        [FromBody] SelectPosCustomerRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var terminal = await posWorkflowService.SelectCustomerAsync(
+            User.GetTenantId(),
+            request,
+            cancellationToken);
+
+        return Ok(terminal);
+    }
+
+    [HttpPost("hold")]
+    [ProducesResponseType<PosWorkflowActionDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<PosWorkflowActionDto>> HoldCurrentSaleAsync(
+        [FromBody] CreateHeldOrderRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var result = await posWorkflowService.HoldCurrentSaleAsync(
+            User.GetTenantId(),
+            User.GetUserId(),
+            request,
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("hold/{heldOrderId:guid}/resume")]
+    [ProducesResponseType<PosWorkflowActionDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<PosWorkflowActionDto>> ResumeHeldOrderAsync(
+        Guid heldOrderId,
+        CancellationToken cancellationToken)
+    {
+        var result = await posWorkflowService.ResumeHeldOrderAsync(
+            User.GetTenantId(),
+            heldOrderId,
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("bookings")]
+    [ProducesResponseType<PosWorkflowActionDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<PosWorkflowActionDto>> CreateBookingAsync(
+        [FromBody] CreateBookingOrderRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var result = await posWorkflowService.CreateBookingAsync(
+            User.GetTenantId(),
+            User.GetUserId(),
+            request,
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("bookings/{bookingId:guid}/payments")]
+    [ProducesResponseType<PosWorkflowActionDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<PosWorkflowActionDto>> CollectBookingPaymentAsync(
+        Guid bookingId,
+        [FromBody] CollectBookingPaymentRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var result = await posWorkflowService.CollectBookingPaymentAsync(
+            User.GetTenantId(),
+            bookingId,
+            request,
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("bookings/{bookingId:guid}/complete")]
+    [ProducesResponseType<PosWorkflowActionDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<PosWorkflowActionDto>> CompleteBookingAsync(
+        Guid bookingId,
+        [FromBody] CompleteBookingRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var result = await posWorkflowService.CompleteBookingAsync(
+            User.GetTenantId(),
+            User.GetUserId(),
+            bookingId,
+            request,
+            cancellationToken);
+
+        return Ok(result);
+    }
+
     [HttpPost("checkout")]
     [ProducesResponseType<PosCheckoutReceiptDto>(StatusCodes.Status200OK)]
     public async Task<ActionResult<PosCheckoutReceiptDto>> CheckoutAsync(
@@ -83,6 +174,24 @@ public sealed class PosController(
         var sale = await posWorkflowService.SubmitSaleToFbrAsync(
             User.GetTenantId(),
             saleId,
+            cancellationToken);
+
+        return Ok(sale);
+    }
+
+    [HttpPost("sales/{saleId:guid}/refund")]
+    [Authorize(Roles = "Owner,Manager,Back Office")]
+    [ProducesResponseType<SalesHistoryItemDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<SalesHistoryItemDto>> RefundSaleAsync(
+        Guid saleId,
+        [FromBody] RefundSaleRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var sale = await posWorkflowService.RefundSaleAsync(
+            User.GetTenantId(),
+            User.GetUserId(),
+            saleId,
+            request,
             cancellationToken);
 
         return Ok(sale);

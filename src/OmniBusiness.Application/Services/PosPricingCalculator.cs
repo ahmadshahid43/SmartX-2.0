@@ -7,16 +7,22 @@ internal static class PosPricingCalculator
 {
     private const decimal DiscountThreshold = 3m;
     private const decimal FixedDiscount = 500m;
-    private const decimal TaxRate = 0.17m;
+    private const decimal DefaultTaxRatePercent = 17m;
 
-    public static PosSummaryDto BuildSummary(IEnumerable<CartLine> cartLines)
+    public static PosSummaryDto BuildSummary(
+        IEnumerable<CartLine> cartLines,
+        decimal? taxRatePercent = null,
+        bool taxExempt = false)
     {
         var lines = cartLines.ToArray();
         var itemCount = lines.Sum(line => line.Quantity);
         var subtotal = lines.Sum(line => line.Quantity * line.UnitPrice);
         var discount = itemCount >= DiscountThreshold ? FixedDiscount : 0m;
         var taxableAmount = Math.Max(subtotal - discount, 0m);
-        var tax = decimal.Round(taxableAmount * TaxRate, 2, MidpointRounding.AwayFromZero);
+        var normalizedTaxRatePercent = decimal.Clamp(taxRatePercent ?? DefaultTaxRatePercent, 0m, 100m);
+        var tax = taxExempt
+            ? 0m
+            : decimal.Round(taxableAmount * normalizedTaxRatePercent / 100m, 2, MidpointRounding.AwayFromZero);
 
         return new PosSummaryDto(
             itemCount,

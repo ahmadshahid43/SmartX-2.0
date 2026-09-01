@@ -13,6 +13,7 @@ const moduleFallbackRoutes = [
   { moduleKey: 'supplier-management', route: '/procurement' },
   { moduleKey: 'fbr-compliance', route: '/operations' },
   { moduleKey: 'inventory-core', route: '/inventory' },
+  { moduleKey: 'stock-transfer-desk', route: '/warehouse' },
   { moduleKey: 'employee-management', route: '/users' },
   { moduleKey: 'no-code-builder', route: '/form-builder' },
   { moduleKey: 'plan-and-module-control', route: '/plans' },

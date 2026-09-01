@@ -4,9 +4,15 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Swagger is optional so the LocalJson desktop/offline build does not need NuGet access. -->
+    <EnableSwagger Condition="'$(EnableSwagger)' == ''">false</EnableSwagger>
   </PropertyGroup>
 
-  <ItemGroup>
+  <PropertyGroup Condition="'$(EnableSwagger)' == 'true'">
+    <DefineConstants>$(DefineConstants);ENABLE_SWAGGER</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(EnableSwagger)' == 'true'">
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
   </ItemGroup>

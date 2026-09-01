@@ -18,4 +18,12 @@ public sealed class DashboardController(IWorkspaceQueryService workspaceQuerySer
         var overview = await workspaceQueryService.GetDashboardAsync(User.GetTenantId(), cancellationToken);
         return Ok(overview);
     }
+
+    [HttpGet("reports")]
+    [ProducesResponseType<ReportsHubDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ReportsHubDto>> GetReportsAsync(CancellationToken cancellationToken)
+    {
+        var reports = await workspaceQueryService.GetReportsHubAsync(User.GetTenantId(), cancellationToken);
+        return Ok(reports);
+    }
 }

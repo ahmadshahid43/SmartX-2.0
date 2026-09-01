@@ -1,0 +1,393 @@
+<section class="page-stack">
+  <div class="page-header with-actions">
+    <div>
+      <p class="eyebrow">Warehouse Workflow</p>
+      <h1>Transfers, Inward, and Gate Pass Control</h1>
+      <p>Inter-branch movement, GRN intake, aur dispatch control ko ek hi desk se manage karein.</p>
+    </div>
+
+    <div class="page-actions">
+      <a class="secondary-button compact-button" routerLink="/procurement">
+        <span class="material-symbols-outlined">local_shipping</span>
+        Procurement
+      </a>
+      <a class="secondary-button compact-button" routerLink="/inventory">
+        <span class="material-symbols-outlined">inventory_2</span>
+        Inventory
+      </a>
+      <button class="primary-button compact-button" type="button" [disabled]="loading()" (click)="reload()">
+        <span class="material-symbols-outlined">refresh</span>
+        Refresh Desk
+      </button>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="feedback-card error">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div class="feedback-card success">{{ successMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="feedback-card">Loading warehouse control desk...</div>
+  } @else if (hub(); as data) {
+    <div class="metric-grid">
+      <article class="surface-card summary-card accent">
+        <span>Active Transfers</span>
+        <strong>{{ data.metrics.activeTransfers }}</strong>
+        <small>Dispatch aur receiving ke darmiyan chalne wale movements.</small>
+      </article>
+
+      <article class="surface-card summary-card">
+        <span>Pending Inward</span>
+        <strong>{{ data.metrics.pendingReceipts }}</strong>
+        <small>Inspection, partial, ya GRN verification wali receipts.</small>
+      </article>
+
+      <article class="surface-card summary-card">
+        <span>Open Gate Passes</span>
+        <strong>{{ data.metrics.openGatePasses }}</strong>
+        <small>Prepared ya dispatch state me maujood issue slips.</small>
+      </article>
+
+      <article class="surface-card summary-card">
+        <span>Units In Motion</span>
+        <strong>{{ data.metrics.unitsInMotion }}</strong>
+        <small>Transfer routes par move hone wali total quantity.</small>
+      </article>
+    </div>
+
+    <article class="surface-card command-card">
+      <div>
+        <p class="eyebrow">Warehouse Command Center</p>
+        <h2>Operational modules ko live workflow me chalayein</h2>
+        <p>
+          Yeh desk SQL ke baghair local JSON persistence par bhi kaam karta hai. Aaj transfer create karein,
+          inward receive karein, aur gate pass issue karke dispatch state ko track karein.
+        </p>
+      </div>
+
+      <div class="command-pills">
+        @for (branch of data.branches; track branch) {
+          <span class="capability-chip">{{ branch }}</span>
+        }
+        @for (warehouse of data.warehouses; track warehouse) {
+          <span class="capability-chip soft">{{ warehouse }}</span>
+        }
+      </div>
+    </article>
+
+    <div class="workflow-stack">
+      <section class="workflow-card surface-card">
+        <div class="section-header">
+          <div>
+            <h2>Stock Transfer Desk</h2>
+            <p>Branch refill aur inter-warehouse movement ka live register.</p>
+          </div>
+          <span [class]="moduleState().transfer ? 'status-chip success' : 'status-chip warning'">
+            {{ moduleState().transfer ? 'Module Active' : 'Enable in plan' }}
+          </span>
+        </div>
+
+        @if (moduleState().transfer) {
+          <div class="workflow-grid">
+            <div class="editor-card">
+              <div class="form-grid">
+                <label class="field">
+                  <span>From Branch</span>
+                  <select [(ngModel)]="transferForm.fromBranchName">
+                    @for (branch of branchOptions(); track branch) {
+                      <option [value]="branch">{{ branch }}</option>
+                    }
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>To Branch</span>
+                  <select [(ngModel)]="transferForm.toBranchName">
+                    <option value="">Select destination</option>
+                    @for (branch of branchOptions(); track branch) {
+                      <option [value]="branch">{{ branch }}</option>
+                    }
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Units</span>
+                  <input [(ngModel)]="transferForm.units" type="number" min="1" />
+                </label>
+
+                <label class="field">
+                  <span>Expected Arrival</span>
+                  <input [(ngModel)]="transferForm.expectedAt" type="datetime-local" />
+                </label>
+
+                <label class="field">
+                  <span>Status</span>
+                  <select [(ngModel)]="transferForm.status">
+                    @for (status of transferStatuses; track status) {
+                      <option [value]="status">{{ status }}</option>
+                    }
+                  </select>
+                </label>
+
+                <label class="field full">
+                  <span>Notes</span>
+                  <textarea [(ngModel)]="transferForm.notes" rows="3"></textarea>
+                </label>
+              </div>
+
+              <button class="primary-button wide" type="button" [disabled]="saving()" (click)="saveTransfer()">
+                Create Stock Transfer
+              </button>
+            </div>
+
+            <div class="table-card">
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Transfer #</th>
+                      <th>Route</th>
+                      <th>Status</th>
+                      <th>Units</th>
+                      <th>ETA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (transfer of data.stockTransfers; track transfer.stockTransferId) {
+                      <tr>
+                        <td class="mono">{{ transfer.transferNo }}</td>
+                        <td>{{ transfer.fromBranchName }} → {{ transfer.toBranchName }}</td>
+                        <td><span [class]="statusClass(transfer.status)">{{ transfer.status }}</span></td>
+                        <td class="mono">{{ transfer.units }}</td>
+                        <td>{{ transfer.expectedAt ? (transfer.expectedAt | date:'MMM d, h:mm a') : 'Pending' }}</td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="5">Abhi koi stock transfer create nahi hua.</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <div class="feedback-card warning">Plan me `Stock Transfer Desk` enable karne par yeh workflow active hoga.</div>
+        }
+      </section>
+
+      <section class="workflow-card surface-card">
+        <div class="section-header">
+          <div>
+            <h2>Inward / GRN Register</h2>
+            <p>Purchase receiving, partial GRN, aur warehouse intake variance capture karein.</p>
+          </div>
+          <span [class]="moduleState().inward ? 'status-chip success' : 'status-chip warning'">
+            {{ moduleState().inward ? 'Module Active' : 'Enable in plan' }}
+          </span>
+        </div>
+
+        @if (moduleState().inward) {
+          <div class="workflow-grid">
+            <div class="editor-card">
+              <div class="form-grid">
+                <label class="field">
+                  <span>PO Number</span>
+                  <input [(ngModel)]="receiptForm.purchaseOrderNo" type="text" />
+                </label>
+
+                <label class="field">
+                  <span>Vendor</span>
+                  <input [(ngModel)]="receiptForm.vendorName" type="text" />
+                </label>
+
+                <label class="field">
+                  <span>Warehouse</span>
+                  <select [(ngModel)]="receiptForm.warehouseName">
+                    @for (warehouse of warehouseOptions(); track warehouse) {
+                      <option [value]="warehouse">{{ warehouse }}</option>
+                    }
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Lines</span>
+                  <input [(ngModel)]="receiptForm.lineCount" type="number" min="1" />
+                </label>
+
+                <label class="field">
+                  <span>Received Units</span>
+                  <input [(ngModel)]="receiptForm.receivedUnits" type="number" min="1" />
+                </label>
+
+                <label class="field">
+                  <span>Variance Units</span>
+                  <input [(ngModel)]="receiptForm.varianceUnits" type="number" min="0" />
+                </label>
+
+                <label class="field">
+                  <span>Status</span>
+                  <select [(ngModel)]="receiptForm.status">
+                    @for (status of inwardStatuses; track status) {
+                      <option [value]="status">{{ status }}</option>
+                    }
+                  </select>
+                </label>
+
+                <label class="field full">
+                  <span>Notes</span>
+                  <textarea [(ngModel)]="receiptForm.notes" rows="3"></textarea>
+                </label>
+              </div>
+
+              <button class="primary-button wide" type="button" [disabled]="saving()" (click)="saveReceipt()">
+                Add Inward Entry
+              </button>
+            </div>
+
+            <div class="table-card">
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>GRN #</th>
+                      <th>PO / Vendor</th>
+                      <th>Status</th>
+                      <th>Units</th>
+                      <th>Received</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (receipt of data.goodsReceipts; track receipt.goodsReceiptId) {
+                      <tr>
+                        <td class="mono">{{ receipt.receiptNo }}</td>
+                        <td>{{ receipt.purchaseOrderNo }} · {{ receipt.vendorName }}</td>
+                        <td><span [class]="statusClass(receipt.status)">{{ receipt.status }}</span></td>
+                        <td class="mono">{{ receipt.receivedUnits }}</td>
+                        <td>{{ receipt.receivedAt | date:'MMM d, h:mm a' }}</td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="5">Abhi inward register khali hai.</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <div class="feedback-card warning">Plan me `Inward Register` enable karne par yeh workflow active hoga.</div>
+        }
+      </section>
+
+      <section class="workflow-card surface-card">
+        <div class="section-header">
+          <div>
+            <h2>Gate Pass Control</h2>
+            <p>Dispatch, return, aur repair movement ke liye issue slips aur references maintain karein.</p>
+          </div>
+          <span [class]="moduleState().gatePass ? 'status-chip success' : 'status-chip warning'">
+            {{ moduleState().gatePass ? 'Module Active' : 'Enable in plan' }}
+          </span>
+        </div>
+
+        @if (moduleState().gatePass) {
+          <div class="workflow-grid">
+            <div class="editor-card">
+              <div class="form-grid">
+                <label class="field">
+                  <span>Movement Type</span>
+                  <select [(ngModel)]="gatePassForm.movementType">
+                    @for (type of movementTypes; track type) {
+                      <option [value]="type">{{ type }}</option>
+                    }
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Warehouse</span>
+                  <select [(ngModel)]="gatePassForm.warehouseName">
+                    @for (warehouse of warehouseOptions(); track warehouse) {
+                      <option [value]="warehouse">{{ warehouse }}</option>
+                    }
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Destination</span>
+                  <input [(ngModel)]="gatePassForm.destinationName" type="text" />
+                </label>
+
+                <label class="field">
+                  <span>Reference No</span>
+                  <input [(ngModel)]="gatePassForm.referenceNo" type="text" />
+                </label>
+
+                <label class="field">
+                  <span>Units</span>
+                  <input [(ngModel)]="gatePassForm.units" type="number" min="1" />
+                </label>
+
+                <label class="field">
+                  <span>Status</span>
+                  <select [(ngModel)]="gatePassForm.status">
+                    @for (status of gatePassStatuses; track status) {
+                      <option [value]="status">{{ status }}</option>
+                    }
+                  </select>
+                </label>
+
+                <label class="field full">
+                  <span>Notes</span>
+                  <textarea [(ngModel)]="gatePassForm.notes" rows="3"></textarea>
+                </label>
+              </div>
+
+              <button class="primary-button wide" type="button" [disabled]="saving()" (click)="saveGatePass()">
+                Issue Gate Pass
+              </button>
+            </div>
+
+            <div class="table-card">
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Gate Pass #</th>
+                      <th>Type</th>
+                      <th>Destination</th>
+                      <th>Status</th>
+                      <th>Units</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (gatePass of data.gatePasses; track gatePass.gatePassId) {
+                      <tr>
+                        <td class="mono">{{ gatePass.gatePassNo }}</td>
+                        <td>{{ gatePass.movementType }}</td>
+                        <td>{{ gatePass.destinationName }}</td>
+                        <td><span [class]="statusClass(gatePass.status)">{{ gatePass.status }}</span></td>
+                        <td class="mono">{{ gatePass.units }}</td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="5">Abhi koi gate pass issue nahi hua.</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <div class="feedback-card warning">Plan me `Gate Pass Control` enable karne par yeh workflow active hoga.</div>
+        }
+      </section>
+    </div>
+  }
+</section>

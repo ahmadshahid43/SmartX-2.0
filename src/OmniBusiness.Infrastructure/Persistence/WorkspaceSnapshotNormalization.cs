@@ -5,6 +5,9 @@ namespace OmniBusiness.Infrastructure.Persistence;
 internal static class WorkspaceSnapshotNormalization
 {
     private static readonly Guid WalkInCustomerId = Guid.Parse("77777777-7777-7777-7777-777777777771");
+    private const decimal PosDiscountThreshold = 3m;
+    private const decimal PosFixedDiscount = 500m;
+    private const decimal PosTaxRate = 0.17m;
     private static readonly IReadOnlyDictionary<string, decimal> MarketMonthlyPriceMap =
         new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
         {
@@ -21,7 +24,10 @@ internal static class WorkspaceSnapshotNormalization
             ["inventory-core"] = 650m,
             ["trade-in"] = 450m,
             ["stock-take"] = 300m,
+            ["stock-transfer-desk"] = 325m,
             ["grn-receiving"] = 350m,
+            ["inward-register"] = 275m,
+            ["gate-pass-control"] = 225m,
             ["warehouse-reports"] = 450m,
             ["barcode-suite"] = 250m,
             ["supplier-management"] = 300m,
@@ -81,7 +87,27 @@ internal static class WorkspaceSnapshotNormalization
                     : transaction.CashierName,
                 ReceivedAmount = transaction.ReceivedAmount <= 0 ? transaction.Amount : transaction.ReceivedAmount,
                 ChangeAmount = transaction.ChangeAmount < 0 ? 0 : transaction.ChangeAmount,
-                FbrStatus = string.IsNullOrWhiteSpace(transaction.FbrStatus) ? "QueuedOffline" : transaction.FbrStatus
+                FbrStatus = string.IsNullOrWhiteSpace(transaction.FbrStatus) ? "QueuedOffline" : transaction.FbrStatus,
+                PaidAmount = transaction.PaidAmount <= 0
+                    ? Math.Max(transaction.Amount - Math.Max(transaction.BalanceAmount, 0), 0)
+                    : transaction.PaidAmount,
+                BalanceAmount = transaction.BalanceAmount < 0 ? 0 : transaction.BalanceAmount,
+                PaymentStatus = string.IsNullOrWhiteSpace(transaction.PaymentStatus)
+                    ? (IsRefundedStatus(transaction.Status)
+                        ? "Refunded"
+                        : transaction.BalanceAmount > 0
+                            ? "Partially Paid"
+                            : "Paid")
+                    : transaction.PaymentStatus,
+                Payments = NormalizePayments(
+                    transaction.Payments,
+                    transaction.PaymentMethod,
+                    transaction.PaidAmount <= 0
+                        ? Math.Max(transaction.Amount - Math.Max(transaction.BalanceAmount, 0), 0)
+                        : transaction.PaidAmount),
+                RefundedAmount = NormalizeRefundedAmount(transaction),
+                RefundedBy = NormalizeNullableText(transaction.RefundedBy),
+                RefundReason = NormalizeNullableText(transaction.RefundReason)
             })
             .ToArray();
 
@@ -94,6 +120,14 @@ internal static class WorkspaceSnapshotNormalization
         var stockTransfers = NormalizeStockTransfers(snapshot, branches, adminUser);
         var cashShifts = NormalizeCashShifts(snapshot, users, recentTransactions);
         var subscriptionSettings = NormalizeSubscriptionSettings(snapshot);
+        var heldOrders = NormalizeHeldOrders(snapshot, activeCustomer, adminUser);
+        var bookings = NormalizeBookings(snapshot, adminUser);
+        var nextBookingSequence = snapshot.NextBookingSequence > 0
+            ? snapshot.NextBookingSequence
+            : InferNextBookingSequence(bookings);
+        var nextHoldSequence = snapshot.NextHoldSequence > 0
+            ? snapshot.NextHoldSequence
+            : InferNextHoldSequence(heldOrders);
 
         return snapshot with
         {
@@ -115,7 +149,14 @@ internal static class WorkspaceSnapshotNormalization
             StockTransfers = stockTransfers,
             CashShifts = cashShifts,
             SubscriptionSettings = subscriptionSettings,
-            NextSaleSequence = nextSequence
+            NextSaleSequence = nextSequence,
+            GoodsReceipts = NormalizeGoodsReceipts(snapshot),
+            GatePasses = NormalizeGatePasses(snapshot),
+            StockTakes = NormalizeStockTakes(snapshot),
+            HeldOrders = heldOrders,
+            Bookings = bookings,
+            NextBookingSequence = nextBookingSequence,
+            NextHoldSequence = nextHoldSequence
         };
     }
 
@@ -244,6 +285,99 @@ internal static class WorkspaceSnapshotNormalization
         return Array.Empty<CashShift>();
     }
 
+    private static GoodsReceipt[] NormalizeGoodsReceipts(WorkspaceSnapshot snapshot)
+    {
+        return snapshot.GoodsReceipts is { Count: > 0 }
+            ? snapshot.GoodsReceipts
+                .OrderByDescending(receipt => receipt.ReceivedAt)
+                .ToArray()
+            : Array.Empty<GoodsReceipt>();
+    }
+
+    private static GatePass[] NormalizeGatePasses(WorkspaceSnapshot snapshot)
+    {
+        return snapshot.GatePasses is { Count: > 0 }
+            ? snapshot.GatePasses
+                .OrderByDescending(pass => pass.IssuedAt)
+                .ToArray()
+            : Array.Empty<GatePass>();
+    }
+
+    private static StockTakeSession[] NormalizeStockTakes(WorkspaceSnapshot snapshot)
+    {
+        return snapshot.StockTakes is { Count: > 0 }
+            ? snapshot.StockTakes
+                .OrderByDescending(stockTake => stockTake.CountedAt)
+                .ToArray()
+            : Array.Empty<StockTakeSession>();
+    }
+
+    private static PosHeldOrder[] NormalizeHeldOrders(
+        WorkspaceSnapshot snapshot,
+        PosCustomer activeCustomer,
+        AppUser adminUser)
+    {
+        return snapshot.HeldOrders is { Count: > 0 }
+            ? snapshot.HeldOrders
+                .Select(order =>
+                {
+                    var lines = order.Lines ?? Array.Empty<CartLine>();
+                    var derivedItemCount = lines.Sum(line => Math.Max(line.Quantity, 0));
+                    var derivedTotal = lines.Sum(line => Math.Max(line.Quantity, 0) * line.UnitPrice);
+
+                    return order with
+                    {
+                        CustomerName = string.IsNullOrWhiteSpace(order.CustomerName) ? activeCustomer.Name : order.CustomerName,
+                        PricingTier = string.IsNullOrWhiteSpace(order.PricingTier) ? activeCustomer.PricingTier : order.PricingTier,
+                        HeldBy = string.IsNullOrWhiteSpace(order.HeldBy) ? adminUser.DisplayName : order.HeldBy,
+                        ItemCount = order.ItemCount <= 0 ? derivedItemCount : order.ItemCount,
+                        Total = order.Total <= 0 ? derivedTotal : order.Total,
+                        Lines = lines
+                    };
+                })
+                .OrderByDescending(order => order.HeldAt)
+                .ToArray()
+            : Array.Empty<PosHeldOrder>();
+    }
+
+    private static PosBookingOrder[] NormalizeBookings(WorkspaceSnapshot snapshot, AppUser adminUser)
+    {
+        return snapshot.Bookings is { Count: > 0 }
+            ? snapshot.Bookings
+                .Select(order =>
+                {
+                    var lines = order.Lines ?? Array.Empty<SaleLine>();
+                    var totals = BuildTotals(lines);
+                    var totalAmount = order.TotalAmount <= 0 ? totals.Total : order.TotalAmount;
+                    var paidAmount = order.PaidAmount < 0 ? 0 : order.PaidAmount;
+                    var balanceAmount = order.BalanceAmount < 0
+                        ? Math.Max(totalAmount - paidAmount, 0)
+                        : order.BalanceAmount;
+
+                    return order with
+                    {
+                        BookedBy = string.IsNullOrWhiteSpace(order.BookedBy) ? adminUser.DisplayName : order.BookedBy,
+                        Lines = lines,
+                        ItemCount = order.ItemCount <= 0 ? totals.ItemCount : order.ItemCount,
+                        Subtotal = order.Subtotal <= 0 ? totals.Subtotal : order.Subtotal,
+                        Discount = order.Discount < 0 ? totals.Discount : order.Discount,
+                        Tax = order.Tax < 0 ? totals.Tax : order.Tax,
+                        TotalAmount = totalAmount,
+                        PaidAmount = paidAmount,
+                        BalanceAmount = balanceAmount,
+                        PaymentStatus = string.IsNullOrWhiteSpace(order.PaymentStatus)
+                            ? (balanceAmount > 0
+                                ? (paidAmount > 0 ? "Partially Paid" : "Unpaid")
+                                : "Paid")
+                            : order.PaymentStatus,
+                        Payments = NormalizePayments(order.Payments, null, paidAmount)
+                    };
+                })
+                .OrderByDescending(order => order.CreatedAt)
+                .ToArray()
+            : Array.Empty<PosBookingOrder>();
+    }
+
     private static int InferNextSequence(IEnumerable<SaleRecord> transactions)
     {
         var maxSequence = transactions
@@ -254,6 +388,28 @@ internal static class WorkspaceSnapshotNormalization
                 return parts.Length == 2 && int.TryParse(parts[1], out var sequence) ? sequence : 8901;
             })
             .DefaultIfEmpty(8901)
+            .Max();
+
+        return maxSequence + 1;
+    }
+
+    private static int InferNextBookingSequence(IEnumerable<PosBookingOrder> bookings)
+    {
+        var maxSequence = bookings
+            .Select(booking => booking.BookingNo)
+            .Select(reference => ParseSequence(reference, 4099))
+            .DefaultIfEmpty(4099)
+            .Max();
+
+        return maxSequence + 1;
+    }
+
+    private static int InferNextHoldSequence(IEnumerable<PosHeldOrder> heldOrders)
+    {
+        var maxSequence = heldOrders
+            .Select(order => order.TicketNo)
+            .Select(reference => ParseSequence(reference, 119))
+            .DefaultIfEmpty(119)
             .Max();
 
         return maxSequence + 1;
@@ -285,6 +441,7 @@ internal static class WorkspaceSnapshotNormalization
         }
 
         var normalizedPlanCode = NormalizePlanCode(snapshot.SubscriptionSettings.PlanCode, snapshot.Tenant.SubscriptionPlan);
+        entitlements = AppendPlanUpgradeModules(normalizedPlanCode, entitlements);
         var baseMonthlyPrice = snapshot.SubscriptionSettings.BaseMonthlyPrice < 0
             ? 0
             : decimal.Round(snapshot.SubscriptionSettings.BaseMonthlyPrice, 2, MidpointRounding.AwayFromZero);
@@ -352,6 +509,41 @@ internal static class WorkspaceSnapshotNormalization
             .ToArray();
     }
 
+    private static ModuleEntitlement[] AppendPlanUpgradeModules(
+        string planCode,
+        IReadOnlyList<ModuleEntitlement> entitlements)
+    {
+        var upgraded = entitlements
+            .GroupBy(entitlement => entitlement.ModuleKey, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.Last())
+            .ToDictionary(entitlement => entitlement.ModuleKey, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var moduleKey in GetPlanUpgradeModuleKeys(planCode))
+        {
+            if (upgraded.ContainsKey(moduleKey))
+            {
+                continue;
+            }
+
+            upgraded[moduleKey] = new ModuleEntitlement(moduleKey, true, GetDefaultModuleMonthlyPrice(moduleKey));
+        }
+
+        return upgraded.Values
+            .OrderBy(entitlement => entitlement.ModuleKey, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private static IReadOnlyList<string> GetPlanUpgradeModuleKeys(string planCode)
+    {
+        return planCode switch
+        {
+            "growth" => ["book-orders", "hold-and-resume", "split-payments", "stock-transfer-desk", "inward-register"],
+            "business" => ["book-orders", "hold-and-resume", "split-payments", "late-payments", "stock-transfer-desk", "inward-register", "gate-pass-control"],
+            "premium" => ["book-orders", "hold-and-resume", "split-payments", "late-payments", "stock-transfer-desk", "inward-register", "gate-pass-control"],
+            _ => Array.Empty<string>()
+        };
+    }
+
     private static decimal GetDefaultBaseMonthlyPrice(string? planCode)
     {
         return NormalizePlanCode(planCode, planCode) switch
@@ -388,5 +580,78 @@ internal static class WorkspaceSnapshotNormalization
             .Trim('-');
 
         return string.IsNullOrWhiteSpace(sanitized) ? "starter" : sanitized;
+    }
+
+    private static PaymentAllocation[] NormalizePayments(
+        IReadOnlyList<PaymentAllocation>? payments,
+        string? fallbackMethod,
+        decimal fallbackAmount)
+    {
+        var normalized = payments?
+            .Where(payment => payment is not null && payment.Amount > 0)
+            .Select(payment => new PaymentAllocation(
+                string.IsNullOrWhiteSpace(payment.Method) ? "Cash" : payment.Method.Trim(),
+                decimal.Round(payment.Amount, 2, MidpointRounding.AwayFromZero),
+                string.IsNullOrWhiteSpace(payment.ReferenceNo) ? null : payment.ReferenceNo.Trim()))
+            .ToArray()
+            ?? Array.Empty<PaymentAllocation>();
+
+        if (normalized.Length > 0)
+        {
+            return normalized;
+        }
+
+        if (fallbackAmount <= 0)
+        {
+            return Array.Empty<PaymentAllocation>();
+        }
+
+        return
+        [
+            new PaymentAllocation(
+                string.IsNullOrWhiteSpace(fallbackMethod) ? "Cash" : fallbackMethod.Trim(),
+                decimal.Round(fallbackAmount, 2, MidpointRounding.AwayFromZero))
+        ];
+    }
+
+    private static (int ItemCount, decimal Subtotal, decimal Discount, decimal Tax, decimal Total) BuildTotals(
+        IReadOnlyList<SaleLine> lines)
+    {
+        var itemCount = lines.Sum(line => Math.Max(line.Quantity, 0));
+        var subtotal = lines.Sum(line => line.LineTotal);
+        var discount = itemCount >= PosDiscountThreshold ? PosFixedDiscount : 0m;
+        var taxable = Math.Max(subtotal - discount, 0m);
+        var tax = decimal.Round(taxable * PosTaxRate, 2, MidpointRounding.AwayFromZero);
+
+        return (itemCount, subtotal, discount, tax, taxable + tax);
+    }
+
+    private static decimal NormalizeRefundedAmount(SaleRecord transaction)
+    {
+        if (transaction.RefundedAmount > 0)
+        {
+            return decimal.Round(Math.Min(transaction.RefundedAmount, Math.Max(transaction.Amount, 0)), 2, MidpointRounding.AwayFromZero);
+        }
+
+        return IsRefundedStatus(transaction.Status)
+            ? decimal.Round(Math.Max(transaction.Amount, 0), 2, MidpointRounding.AwayFromZero)
+            : 0m;
+    }
+
+    private static bool IsRefundedStatus(string? status)
+    {
+        return !string.IsNullOrWhiteSpace(status)
+            && status.Contains("Refund", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? NormalizeNullableText(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static int ParseSequence(string reference, int fallback)
+    {
+        var parts = reference.Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return parts.Length == 2 && int.TryParse(parts[1], out var sequence) ? sequence : fallback;
     }
 }

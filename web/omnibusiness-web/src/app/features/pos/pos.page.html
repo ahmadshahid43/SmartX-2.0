@@ -5,7 +5,7 @@
         <div>
           <div class="eyebrow">Retail Counter</div>
           <h2>Commercial POS Console</h2>
-          <p>Fast cashier flow, offline-ready parking, thermal slip print, aur FBR queue controls.</p>
+          <p>Hold/resume, booked orders, advance collection, aur split tender ek hi fast cashier screen me.</p>
         </div>
 
         <div class="terminal-badge">
@@ -29,11 +29,11 @@
         </article>
         <article class="metric-tile">
           <span class="metric-label">Held Orders</span>
-          <strong>{{ heldOrders().length }}</strong>
+          <strong>{{ data.metrics.heldOrderCount }}</strong>
         </article>
         <article class="metric-tile">
-          <span class="metric-label">Sale Total</span>
-          <strong>{{ summary().total | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+          <span class="metric-label">Due Collection</span>
+          <strong>{{ data.metrics.bookingDueAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
         </article>
       </div>
 
@@ -48,6 +48,10 @@
           Hold Current Sale
           <span class="shortcut-pill">F8</span>
         </button>
+        <button class="secondary-button wide" type="button" [disabled]="busy() || cart().length === 0" (click)="createBooking()">
+          <span class="material-symbols-outlined">event_note</span>
+          Book Current Order
+        </button>
         <button class="secondary-button wide" type="button" [disabled]="busy()" (click)="voidCurrentSale()">
           <span class="material-symbols-outlined">delete</span>
           Void Active Sale
@@ -58,7 +62,7 @@
         <div class="section-header compact">
           <div>
             <strong>Manual Add to Bill</strong>
-            <p>Scanner na ho to SKU, barcode, ya product name se sale continue karein.</p>
+            <p>Scanner na ho to SKU, barcode, ya product name se billing continue karein.</p>
           </div>
           <span class="status-chip neutral">No Scanner Needed</span>
         </div>
@@ -98,27 +102,128 @@
         }
       </div>
 
+      <div class="booking-builder-card">
+        <div class="section-header compact">
+          <div>
+            <strong>Book Order</strong>
+            <p>Customer details, due date, aur advance amount ke sath order reserve karein.</p>
+          </div>
+          <span class="status-chip success">{{ data.metrics.bookingCount }} open</span>
+        </div>
+
+        <div class="booking-form-grid">
+          <label class="field">
+            <span>Customer Name</span>
+            <input
+              type="text"
+              placeholder="Walk-in booking name"
+              [value]="bookingForm().customerName"
+              (input)="setBookingField('customerName', $any($event.target).value)"
+            />
+          </label>
+
+          <label class="field">
+            <span>Phone Number</span>
+            <input
+              type="text"
+              placeholder="03xx..."
+              [value]="bookingForm().phoneNumber"
+              (input)="setBookingField('phoneNumber', $any($event.target).value)"
+            />
+          </label>
+
+          <label class="field">
+            <span>Email</span>
+            <input
+              type="email"
+              placeholder="customer@email.com"
+              [value]="bookingForm().email"
+              (input)="setBookingField('email', $any($event.target).value)"
+            />
+          </label>
+
+          <label class="field">
+            <span>Due Date</span>
+            <input
+              type="date"
+              [value]="bookingForm().dueAt"
+              (input)="setBookingField('dueAt', $any($event.target).value)"
+            />
+          </label>
+
+          <label class="field">
+            <span>Advance Amount</span>
+            <input
+              type="number"
+              min="0"
+              placeholder="0"
+              [value]="bookingForm().depositAmount"
+              (input)="setBookingField('depositAmount', $any($event.target).value)"
+            />
+          </label>
+
+          <label class="field">
+            <span>Advance Method</span>
+            <select
+              [value]="bookingForm().depositMethod"
+              (change)="setBookingField('depositMethod', $any($event.target).value)"
+            >
+              @for (method of paymentMethods(); track method) {
+                @if (method !== 'Mixed') {
+                  <option [value]="method">{{ method }}</option>
+                }
+              }
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Reference No</span>
+            <input
+              type="text"
+              placeholder="Cheque / Txn ref"
+              [value]="bookingForm().referenceNo"
+              (input)="setBookingField('referenceNo', $any($event.target).value)"
+            />
+          </label>
+
+          <label class="field field-wide">
+            <span>Notes</span>
+            <textarea
+              rows="2"
+              placeholder="Pickup, reservation, ya special note"
+              [value]="bookingForm().notes"
+              (input)="setBookingField('notes', $any($event.target).value)"
+            ></textarea>
+          </label>
+        </div>
+
+        <button class="primary-button wide" type="button" [disabled]="busy() || cart().length === 0" (click)="createBooking()">
+          <span class="material-symbols-outlined">bookmark_added</span>
+          Save Booked Order
+        </button>
+      </div>
+
       <div class="held-orders-card">
         <div class="section-header compact">
           <div>
             <strong>Held Tickets</strong>
             <p>Park & resume sales without losing current bill.</p>
           </div>
-          <span class="status-chip warning">{{ upcomingTicketLabel() }}</span>
+          <span class="status-chip warning">{{ heldOrders().length }} live</span>
         </div>
 
         <div class="held-orders-list">
           @for (order of heldOrders(); track order.id) {
             <button class="held-order-item" type="button" [disabled]="busy()" (click)="resumeHeldOrder(order.id)">
               <div class="held-order-head">
-                <strong>{{ order.label }}</strong>
-                <span class="shortcut-pill">{{ heldTimestamp(order) }}</span>
+                <strong>{{ order.ticketNo }}</strong>
+                <span class="shortcut-pill">{{ heldTimestamp(order.heldAt) }}</span>
               </div>
               <div class="held-order-meta">
                 <span>{{ order.itemCount }} items</span>
                 <strong>{{ order.total | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
               </div>
-              <div class="held-order-preview">{{ heldPreview(order) }}</div>
+              <div class="held-order-preview">{{ heldPreviewLine(order.id) }}</div>
             </button>
           } @empty {
             <div class="empty-state small">
@@ -162,7 +267,7 @@
         <div>
           <div class="eyebrow">Catalog</div>
           <h2>Sell Screen</h2>
-          <p>Search, tap, and ring up items quickly for grocery, pharmacy, electronics, ya general retail.</p>
+          <p>Search, tap, and ring up items quickly for pharmacy, grocery, electronics, ya general retail.</p>
         </div>
 
         <div class="catalog-status-row">
@@ -196,6 +301,67 @@
           </button>
         </div>
       </div>
+
+      @if (bookings().length > 0) {
+        <div class="bookings-panel">
+          <div class="section-header compact">
+            <div>
+              <strong>Booked Orders & Installments</strong>
+              <p>Open reservations, due balances, aur pickup-ready orders yahan se manage karein.</p>
+            </div>
+            <span class="status-chip warning">{{ data.metrics.pendingCollectionCount }} pending</span>
+          </div>
+
+          <div class="bookings-grid">
+            @for (booking of bookings(); track booking.id) {
+              <article class="booking-card">
+                <div class="booking-card-head">
+                  <div>
+                    <strong>{{ booking.bookingNo }}</strong>
+                    <p>{{ booking.customerName }}</p>
+                  </div>
+                  <span class="status-chip" [class.success]="booking.balanceAmount === 0" [class.warning]="booking.balanceAmount > 0">
+                    {{ booking.paymentStatus }}
+                  </span>
+                </div>
+
+                <div class="booking-meta-grid">
+                  <div>
+                    <span>Total</span>
+                    <strong>{{ booking.totalAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+                  </div>
+                  <div>
+                    <span>Paid</span>
+                    <strong>{{ booking.paidAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+                  </div>
+                  <div>
+                    <span>Balance</span>
+                    <strong>{{ booking.balanceAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+                  </div>
+                  <div>
+                    <span>Progress</span>
+                    <strong>{{ bookingProgress(booking) }}%</strong>
+                  </div>
+                </div>
+
+                <div class="progress-track">
+                  <span class="progress-fill" [style.width.%]="bookingProgress(booking)"></span>
+                </div>
+
+                <div class="booking-preview">{{ bookingPreview(booking) }}</div>
+
+                <div class="booking-foot">
+                  <span>{{ booking.dueAt ? ('Due ' + (booking.dueAt | date:'dd MMM')) : 'No due date' }}</span>
+                  <button class="secondary-button compact-button" type="button" [disabled]="busy()" (click)="openBookingDialog(booking)">
+                    <span class="material-symbols-outlined">payments</span>
+                    Manage
+                  </button>
+                </div>
+              </article>
+            }
+          </div>
+        </div>
+      }
 
       @if (favoriteProducts().length > 0) {
         <div class="favorites-panel">
@@ -281,14 +447,64 @@
         </div>
       </div>
 
-      <div class="customer-card cart-customer-card">
+      <button class="customer-card cart-customer-card customer-selector" type="button" [disabled]="busy()" (click)="toggleCustomerPicker()">
         <div class="avatar-circle">{{ data.customer.avatarLetter }}</div>
         <div>
           <strong>{{ data.customer.name }}</strong>
           <span>{{ data.customer.pricingTier }}</span>
         </div>
-        <span class="material-symbols-outlined">expand_more</span>
-      </div>
+        <span class="material-symbols-outlined">{{ customerPickerOpen() ? 'expand_less' : 'expand_more' }}</span>
+      </button>
+
+      @if (customerPickerOpen()) {
+        <section class="customer-picker" aria-label="Select customer">
+          <div class="customer-picker-top">
+            <div>
+              <strong>Customer for this bill</strong>
+              <span>Saved customer select karein ya naya add karein.</span>
+            </div>
+            <button class="secondary-button compact-button" type="button" [disabled]="busy()" (click)="chooseWalkInCustomer()">
+              Walk-in
+            </button>
+          </div>
+
+          <input
+            class="customer-search-input"
+            type="search"
+            placeholder="Search name, phone, email"
+            [value]="customerSearch()"
+            (input)="setCustomerSearch($any($event.target).value)"
+          />
+
+          <div class="customer-results">
+            @for (customer of filteredCustomers(); track customer.customerId) {
+              <button class="customer-result" type="button" [disabled]="busy()" (click)="chooseExistingCustomer(customer)">
+                <span class="avatar-circle small-avatar">{{ customer.avatarLetter }}</span>
+                <span>
+                  <strong>{{ customer.name }}</strong>
+                  <small>{{ customer.phoneNumber || customer.email || customer.pricingTier }}</small>
+                </span>
+                <span class="material-symbols-outlined">north_east</span>
+              </button>
+            } @empty {
+              <div class="customer-empty">No saved customer found. Add one below.</div>
+            }
+          </div>
+
+          <div class="new-customer-form">
+            <strong>Quick add customer</strong>
+            <div class="new-customer-grid">
+              <input type="text" placeholder="Customer name *" [value]="newCustomerName()" (input)="setNewCustomerField('name', $any($event.target).value)" />
+              <input type="tel" placeholder="Phone number" [value]="newCustomerPhone()" (input)="setNewCustomerField('phone', $any($event.target).value)" />
+              <input type="email" placeholder="Email address" [value]="newCustomerEmail()" (input)="setNewCustomerField('email', $any($event.target).value)" />
+            </div>
+            <button class="primary-button compact-button" type="button" [disabled]="busy()" (click)="createAndSelectCustomer()">
+              <span class="material-symbols-outlined">person_add</span>
+              Add & Select
+            </button>
+          </div>
+        </section>
+      }
 
       <div class="cart-lines">
         @for (line of cart(); track line.productId) {
@@ -330,7 +546,7 @@
             <strong>- {{ summary().discount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
           </div>
           <div class="summary-row">
-            <span>Tax (17%)</span>
+            <span>{{ taxLabel() }}</span>
             <strong>{{ summary().tax | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
           </div>
           <div class="summary-row total-row">
@@ -341,22 +557,13 @@
 
         <div class="payment-strip">
           <label class="field compact-field">
-            <span>Payment Method</span>
-            <select [value]="selectedPaymentMethod()" (change)="setPaymentMethod($any($event.target).value)">
-              @for (method of paymentMethods; track method) {
-                <option [value]="method">{{ method }}</option>
-              }
-            </select>
+            <span>Tender Mix</span>
+            <strong>{{ tenderMethodLabel() }}</strong>
           </label>
 
           <label class="field compact-field">
-            <span>Received Amount</span>
-            <input
-              type="number"
-              min="0"
-              [value]="receivedAmount() ?? summary().total"
-              (input)="setReceivedAmount($any($event.target).value)"
-            />
+            <span>Collected Amount</span>
+            <strong>{{ tenderCollectedAmount() | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
           </label>
         </div>
 
@@ -377,11 +584,32 @@
           <strong>{{ changeDue() | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
         </div>
 
+        <div class="tax-policy-card">
+          <div>
+            <strong>Tax policy for this bill</strong>
+            <span>Payment type ke hisab se rate set karein. Tax exempt only authorized zero-tax sale ke liye use karein.</span>
+          </div>
+          <div class="tax-rate-grid">
+            <label class="field compact-field">
+              <span>Standard tax %</span>
+              <input type="number" min="0" max="100" step="0.01" [value]="standardTaxRatePercent()" (input)="setStandardTaxRate($any($event.target).value)" />
+            </label>
+            <label class="field compact-field">
+              <span>Card tax %</span>
+              <input type="number" min="0" max="100" step="0.01" [value]="cardTaxRatePercent()" (input)="setCardTaxRate($any($event.target).value)" />
+            </label>
+          </div>
+          <label class="checkbox-inline tax-exempt-toggle">
+            <input type="checkbox" [checked]="taxExempt()" (change)="setTaxExempt($any($event.target).checked)" />
+            <span>Tax exempt / zero tax for this bill</span>
+          </label>
+        </div>
+
         <label class="checkbox-inline">
           <input
             type="checkbox"
             [checked]="sendToFbr()"
-            (change)="setSendToFbr($any($event.target).checked)"
+            (change)="sendToFbr.set($any($event.target).checked)"
           />
           <span>Queue / send invoice for FBR compliance</span>
         </label>
@@ -390,7 +618,7 @@
           <input
             type="checkbox"
             [checked]="autoPrintSlip()"
-            (change)="setAutoPrintSlip($any($event.target).checked)"
+            (change)="autoPrintSlip.set($any($event.target).checked)"
           />
           <span>Auto print thermal slip after payment</span>
         </label>
@@ -418,7 +646,7 @@
         <div>
           <div class="eyebrow">Tender Screen</div>
           <h2>{{ summary().total | currency:'PKR':'symbol-narrow':'1.0-0' }}</h2>
-          <p>{{ cartQuantity() }} units • {{ selectedPaymentMethod() }} • {{ sendToFbr() ? 'FBR Queue On' : 'Local Invoice Only' }}</p>
+          <p>{{ cartQuantity() }} units • {{ tenderMethodLabel() }} • {{ sendToFbr() ? 'FBR Queue On' : 'Local Invoice Only' }}</p>
         </div>
 
         <button class="icon-button" type="button" (click)="closeTender()">
@@ -427,24 +655,66 @@
       </div>
 
       <div class="tender-methods">
-        @for (method of paymentMethods; track method) {
+        @for (method of paymentMethods(); track method) {
           <button
             class="method-pill"
             type="button"
-            [class.is-active]="selectedPaymentMethod() === method"
-            (click)="setPaymentMethod(method)"
+            [class.is-active]="tenderMethodLabel() === method"
+            (click)="chooseTenderPreset(method)"
           >
             {{ method }}
           </button>
         }
       </div>
 
+      <div class="payment-lines-card">
+        <div class="section-header compact">
+          <div>
+            <strong>Split Payment Builder</strong>
+            <p>Cash, card, transfer, ya wallet ko same bill me split karein.</p>
+          </div>
+          <button class="secondary-button compact-button" type="button" [disabled]="busy()" (click)="addTenderLine()">
+            <span class="material-symbols-outlined">add</span>
+            Add Split
+          </button>
+        </div>
+
+        <div class="tender-lines-grid">
+          @for (line of tenderLines(); track line.id) {
+            <div class="tender-line-row">
+              <select [value]="line.method" (change)="setTenderLineMethod(line.id, $any($event.target).value)">
+                @for (method of paymentMethods(); track method) {
+                  @if (method !== 'Mixed') {
+                    <option [value]="method">{{ method }}</option>
+                  }
+                }
+              </select>
+              <input
+                type="number"
+                min="0"
+                [value]="line.amount"
+                (input)="setTenderLineAmount(line.id, $any($event.target).value)"
+              />
+              <input
+                type="text"
+                placeholder="Reference"
+                [value]="line.referenceNo"
+                (input)="setTenderLineReference(line.id, $any($event.target).value)"
+              />
+              <button class="icon-button inline-icon-button" type="button" [disabled]="busy() || tenderLines().length === 1" (click)="removeTenderLine(line.id)">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
       <label class="field tender-field">
-        <span>Received Amount</span>
+        <span>Quick Single Amount</span>
         <input
           type="number"
           min="0"
-          [value]="receivedAmount() ?? summary().total"
+          [value]="tenderLines()[0]?.amount ?? summary().total"
           (input)="setReceivedAmount($any($event.target).value)"
         />
       </label>
@@ -459,8 +729,8 @@
 
       <div class="tender-summary">
         <div class="tender-summary-card">
-          <span>Received</span>
-          <strong>{{ (receivedAmount() ?? summary().total) | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+          <span>Collected</span>
+          <strong>{{ tenderCollectedAmount() | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
         </div>
         <div class="tender-summary-card">
           <span>Remaining</span>
@@ -477,7 +747,7 @@
           <input
             type="checkbox"
             [checked]="sendToFbr()"
-            (change)="setSendToFbr($any($event.target).checked)"
+            (change)="sendToFbr.set($any($event.target).checked)"
           />
           <span>Queue invoice for FBR</span>
         </label>
@@ -486,7 +756,7 @@
           <input
             type="checkbox"
             [checked]="autoPrintSlip()"
-            (change)="setAutoPrintSlip($any($event.target).checked)"
+            (change)="autoPrintSlip.set($any($event.target).checked)"
           />
           <span>Auto print thermal slip</span>
         </label>
@@ -502,6 +772,133 @@
           Complete Payment
         </button>
       </div>
+    </section>
+  }
+
+  @if (bookingDialogOpen() && selectedBooking(); as booking) {
+    <div class="tender-backdrop" (click)="closeBookingDialog()"></div>
+
+    <section aria-modal="true" class="surface-card tender-modal booking-modal" role="dialog">
+      <div class="tender-topbar">
+        <div>
+          <div class="eyebrow">Booked Order</div>
+          <h2>{{ booking.bookingNo }}</h2>
+          <p>{{ booking.customerName }} • {{ booking.paymentStatus }} • Balance {{ booking.balanceAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</p>
+        </div>
+
+        <button class="icon-button" type="button" (click)="closeBookingDialog()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="booking-dialog-summary">
+        <article class="tender-summary-card">
+          <span>Total</span>
+          <strong>{{ booking.totalAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+        </article>
+        <article class="tender-summary-card">
+          <span>Paid</span>
+          <strong>{{ booking.paidAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+        </article>
+        <article class="tender-summary-card highlight">
+          <span>Remaining</span>
+          <strong>{{ booking.balanceAmount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+        </article>
+      </div>
+
+      <div class="booking-payment-history">
+        <div class="section-header compact">
+          <div>
+            <strong>Payment History</strong>
+            <p>Advance aur installment lines ka quick view.</p>
+          </div>
+        </div>
+
+        <div class="payment-history-list">
+          @for (payment of booking.payments; track payment.method + payment.amount + payment.referenceNo) {
+            <div class="payment-history-item">
+              <strong>{{ payment.method }}</strong>
+              <span>{{ payment.referenceNo || 'No reference' }}</span>
+              <strong>{{ payment.amount | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+          } @empty {
+            <div class="empty-state small">Abhi koi advance payment save nahi hui.</div>
+          }
+        </div>
+      </div>
+
+      @if (booking.balanceAmount > 0) {
+        <div class="booking-form-grid">
+          <label class="field">
+            <span>Installment Amount</span>
+            <input
+              type="number"
+              min="0"
+              [value]="bookingCollectionAmount()"
+              (input)="bookingCollectionAmount.set($any($event.target).value)"
+            />
+          </label>
+
+          <label class="field">
+            <span>Payment Method</span>
+            <select [value]="bookingCollectionMethod()" (change)="bookingCollectionMethod.set($any($event.target).value)">
+              @for (method of paymentMethods(); track method) {
+                @if (method !== 'Mixed') {
+                  <option [value]="method">{{ method }}</option>
+                }
+              }
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Reference No</span>
+            <input
+              type="text"
+              placeholder="Transfer/card ref"
+              [value]="bookingCollectionReference()"
+              (input)="bookingCollectionReference.set($any($event.target).value)"
+            />
+          </label>
+
+          <label class="field field-wide">
+            <span>Collection Note</span>
+            <textarea
+              rows="2"
+              placeholder="Installment note"
+              [value]="bookingCollectionNotes()"
+              (input)="bookingCollectionNotes.set($any($event.target).value)"
+            ></textarea>
+          </label>
+        </div>
+
+        <div class="summary-row">
+          <span>Balance after this collection</span>
+          <strong>{{ bookingCollectionRemaining() | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong>
+        </div>
+
+        <div class="tender-actions">
+          <button class="primary-button wide xl-button" type="button" [disabled]="busy()" (click)="collectBookingPayment()">
+            <span class="material-symbols-outlined">payments</span>
+            Collect Installment
+          </button>
+        </div>
+      } @else {
+        <label class="checkbox-inline">
+          <input
+            type="checkbox"
+            [checked]="bookingCompletionSendToFbr()"
+            (change)="bookingCompletionSendToFbr.set($any($event.target).checked)"
+          />
+          <span>Issue final invoice with FBR queue</span>
+        </label>
+
+        <div class="tender-actions">
+          <button class="primary-button wide xl-button" type="button" [disabled]="busy()" (click)="completeBooking()">
+            <span class="material-symbols-outlined">receipt_long</span>
+            Complete Booking & Issue Invoice
+          </button>
+        </div>
+      }
     </section>
   }
 }

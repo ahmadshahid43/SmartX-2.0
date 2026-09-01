@@ -23,12 +23,16 @@ set "DOTNET_NOLOGO=1"
 set "DOTNET_GENERATE_ASPNET_CERTIFICATE=false"
 set "DOTNET_ADD_GLOBAL_TOOLS_TO_PATH=0"
 set "DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE=1"
+set "DOTNET_ENVIRONMENT=Development"
+set "ASPNETCORE_ENVIRONMENT=Development"
 set "ASPNETCORE_URLS=http://localhost:5163"
 set "ASPNETCORE_CONTENTROOT=%API_PROJECT%"
+set "Persistence__LocalDataPath=%ROOT%\.artifacts\runtime\foundation.local.json"
 
 if not exist "%APPDATA%\NuGet" mkdir "%APPDATA%\NuGet"
 if not exist "%DOTNET_CLI_HOME%" mkdir "%DOTNET_CLI_HOME%"
 if not exist "%DOTNET_CLI_HOME%\.dotnet" mkdir "%DOTNET_CLI_HOME%\.dotnet"
+if not exist "%ROOT%\.artifacts\runtime" mkdir "%ROOT%\.artifacts\runtime"
 if exist "%ROOT%\NuGet.Config" if not exist "%APPDATA%\NuGet\NuGet.Config" copy /Y "%ROOT%\NuGet.Config" "%APPDATA%\NuGet\NuGet.Config" >nul 2>nul
 
 echo Starting OmniBusiness API on http://localhost:5163

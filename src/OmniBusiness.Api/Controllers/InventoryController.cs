@@ -66,6 +66,21 @@ public sealed class InventoryController(
         return Ok(overview);
     }
 
+    [HttpPost("stock-takes")]
+    [ProducesResponseType<InventoryOverviewDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<InventoryOverviewDto>> CreateStockTakeAsync(
+        [FromBody] SaveStockTakeRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var overview = await inventoryManagementService.CreateStockTakeAsync(
+            User.GetTenantId(),
+            User.GetUserId(),
+            request,
+            cancellationToken);
+
+        return Ok(overview);
+    }
+
     [HttpPost("imports")]
     [ProducesResponseType<InventoryImportResultDto>(StatusCodes.Status200OK)]
     public async Task<ActionResult<InventoryImportResultDto>> ImportInventoryAsync(

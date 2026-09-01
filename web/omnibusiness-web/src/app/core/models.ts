@@ -166,6 +166,7 @@ export interface StockTransferSummary {
   expectedAt: string | null;
   units: number;
   requestedBy: string;
+  notes: string;
 }
 
 export interface OperationsHub {
@@ -173,6 +174,22 @@ export interface OperationsHub {
   compliance: ComplianceMetrics;
   cashShifts: CashShiftSummary[];
   moduleGroups: PosModuleGroup[];
+}
+
+export interface WarehouseHub {
+  metrics: WarehouseMetrics;
+  branches: string[];
+  warehouses: string[];
+  stockTransfers: StockTransferSummary[];
+  goodsReceipts: GoodsReceiptSummary[];
+  gatePasses: GatePassSummary[];
+}
+
+export interface WarehouseMetrics {
+  activeTransfers: number;
+  pendingReceipts: number;
+  openGatePasses: number;
+  unitsInMotion: number;
 }
 
 export interface CashShiftMetrics {
@@ -202,6 +219,35 @@ export interface CashShiftSummary {
   countedCash: number;
   variance: number;
   status: string;
+}
+
+export interface GoodsReceiptSummary {
+  goodsReceiptId: string;
+  receiptNo: string;
+  purchaseOrderNo: string;
+  vendorName: string;
+  warehouseName: string;
+  status: string;
+  receivedAt: string;
+  receivedBy: string;
+  lineCount: number;
+  receivedUnits: number;
+  varianceUnits: number;
+  notes: string;
+}
+
+export interface GatePassSummary {
+  gatePassId: string;
+  gatePassNo: string;
+  movementType: string;
+  warehouseName: string;
+  destinationName: string;
+  referenceNo: string;
+  status: string;
+  issuedAt: string;
+  issuedBy: string;
+  units: number;
+  notes: string;
 }
 
 export interface PosModuleGroup {
@@ -275,6 +321,37 @@ export interface DashboardAlert {
   actionLabel: string;
 }
 
+export interface ReportsHub {
+  generatedAt: string;
+  sections: ReportSection[];
+  salesByItem: ReportTableRow[];
+  salesByCategory: ReportTableRow[];
+  paymentMethods: ReportTableRow[];
+}
+
+export interface ReportSection {
+  key: string;
+  title: string;
+  description: string;
+  icon: string;
+  metrics: ReportMetric[];
+}
+
+export interface ReportMetric {
+  key: string;
+  label: string;
+  value: number;
+  format: 'currency' | 'number';
+  status: 'ready' | 'attention' | 'risk' | 'data-required' | string;
+}
+
+export interface ReportTableRow {
+  label: string;
+  amount: number;
+  count: number;
+  secondaryLabel: string;
+}
+
 export interface TrendPoint {
   label: string;
   value: number;
@@ -306,6 +383,13 @@ export interface InventoryOverview {
   categories: string[];
   statuses: string[];
   items: InventoryItem[];
+  metrics: InventoryMetrics;
+  lowStockItems: InventoryLowStockItem[];
+  warehouseSummaries: InventoryWarehouseSummary[];
+  categorySummaries: InventoryCategorySummary[];
+  usageInsights: InventoryUsageInsight[];
+  barcodeQueue: InventoryBarcodeQueueItem[];
+  recentStockTakes: StockTakeSummary[];
 }
 
 export interface InventoryImportResult {
@@ -330,6 +414,79 @@ export interface InventoryItem {
   status: string;
   reorderLevel: number;
   visualCode: string;
+  isFavorite: boolean;
+  isQuickSale: boolean;
+}
+
+export interface InventoryMetrics {
+  totalProducts: number;
+  lowStockCount: number;
+  totalValue: number;
+  warehouseCount: number;
+  categoryCount: number;
+  stockTakeCount30Days: number;
+  turnoverRatio30Days: number;
+}
+
+export interface InventoryLowStockItem {
+  productId: string;
+  sku: string;
+  productName: string;
+  warehouse: string;
+  available: number;
+  reorderLevel: number;
+  shortfallUnits: number;
+}
+
+export interface InventoryWarehouseSummary {
+  warehouse: string;
+  productCount: number;
+  inHandUnits: number;
+  availableUnits: number;
+  stockValue: number;
+}
+
+export interface InventoryCategorySummary {
+  category: string;
+  productCount: number;
+  availableUnits: number;
+  stockValue: number;
+  sharePercentage: number;
+}
+
+export interface InventoryUsageInsight {
+  productId: string;
+  sku: string;
+  productName: string;
+  soldUnits30Days: number;
+  netAdjustment30Days: number;
+  turnoverRatio30Days: number;
+  coverageLabel: string;
+}
+
+export interface InventoryBarcodeQueueItem {
+  productId: string;
+  sku: string;
+  productName: string;
+  category: string;
+  visualCode: string;
+  isFavorite: boolean;
+  isQuickSale: boolean;
+}
+
+export interface StockTakeSummary {
+  id: string;
+  productId: string;
+  sku: string;
+  productName: string;
+  warehouse: string;
+  systemQuantity: number;
+  countedQuantity: number;
+  varianceQuantity: number;
+  status: string;
+  countedBy: string;
+  notes: string;
+  countedAt: string;
 }
 
 export interface PosTerminal {
@@ -338,6 +495,10 @@ export interface PosTerminal {
   products: PosProduct[];
   cart: CartLine[];
   summary: PosSummary;
+  heldOrders: PosHeldOrder[];
+  bookings: PosBookingOrder[];
+  metrics: PosWorkflowMetrics;
+  paymentMethods: string[];
 }
 
 export interface PosCustomer {
@@ -374,15 +535,74 @@ export interface PosSummary {
   total: number;
 }
 
+export interface PosWorkflowMetrics {
+  heldOrderCount: number;
+  bookingCount: number;
+  bookingDueAmount: number;
+  pendingCollectionCount: number;
+}
+
+export interface PosHeldOrder {
+  id: string;
+  ticketNo: string;
+  customerName: string;
+  pricingTier: string;
+  heldBy: string;
+  heldAt: string;
+  itemCount: number;
+  total: number;
+  lines: CartLine[];
+  notes: string;
+}
+
+export interface PosBookingOrder {
+  id: string;
+  bookingNo: string;
+  customerName: string;
+  phoneNumber: string | null;
+  email: string | null;
+  status: string;
+  createdAt: string;
+  dueAt: string | null;
+  bookedBy: string;
+  itemCount: number;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  totalAmount: number;
+  paidAmount: number;
+  balanceAmount: number;
+  paymentStatus: string;
+  lines: SaleLine[];
+  payments: PosPaymentLine[];
+  notes: string;
+}
+
+export interface PosPaymentLine {
+  method: string;
+  amount: number;
+  referenceNo: string | null;
+}
+
 export interface PosCartMutationRequest {
   productId: string;
   quantity: number;
+}
+
+export interface SelectPosCustomerRequest {
+  customerId: string | null;
+  customerName?: string | null;
+  phoneNumber?: string | null;
+  email?: string | null;
 }
 
 export interface PosCheckoutRequest {
   paymentMethod: string;
   receivedAmount: number | null;
   sendToFbr: boolean;
+  payments?: PosPaymentLineRequest[] | null;
+  taxRatePercent?: number | null;
+  taxExempt?: boolean;
 }
 
 export interface PosCheckoutReceipt {
@@ -398,10 +618,54 @@ export interface PosCheckoutReceipt {
   changeAmount: number;
   fbrStatus: string;
   fbrInvoiceNumber: string | null;
+  paidAmount: number;
+  balanceAmount: number;
+  paymentStatus: string;
+  payments: PosPaymentLine[];
+}
+
+export interface PosWorkflowAction {
+  message: string;
+  terminal: PosTerminal;
+  booking: PosBookingOrder | null;
+  receipt: PosCheckoutReceipt | null;
 }
 
 export interface SalesHistory {
+  metrics: SalesHistoryMetrics;
+  paymentMethods: SalesPaymentMethodSummary[];
+  openBookings: SalesBookingInsight[];
   items: SalesHistoryItem[];
+}
+
+export interface SalesHistoryMetrics {
+  transactionCount: number;
+  netRevenue: number;
+  grossProfit: number;
+  averageTicket: number;
+  refundedCount: number;
+  refundedAmount: number;
+  openBookingCount: number;
+  bookingDueAmount: number;
+  dueTodayBookingCount: number;
+}
+
+export interface SalesPaymentMethodSummary {
+  method: string;
+  amount: number;
+  transactionCount: number;
+}
+
+export interface SalesBookingInsight {
+  bookingId: string;
+  bookingNo: string;
+  customerName: string;
+  totalAmount: number;
+  paidAmount: number;
+  balanceAmount: number;
+  paymentStatus: string;
+  createdAt: string;
+  dueAt: string | null;
 }
 
 export interface SalesHistoryItem {
@@ -424,6 +688,51 @@ export interface SalesHistoryItem {
   fbrInvoiceNumber: string | null;
   fbrErrorMessage: string | null;
   fbrReportedAt: string | null;
+  paidAmount: number;
+  balanceAmount: number;
+  paymentStatus: string;
+  payments: PosPaymentLine[];
+  netAmount: number;
+  refundedAmount: number;
+  refundedAt: string | null;
+  refundedBy: string | null;
+  refundReason: string | null;
+  inventoryReturned: boolean;
+}
+
+export interface PosPaymentLineRequest {
+  method: string;
+  amount: number;
+  referenceNo: string | null;
+}
+
+export interface CreateHeldOrderRequest {
+  notes: string | null;
+}
+
+export interface CreateBookingOrderRequest {
+  customerName: string;
+  phoneNumber: string | null;
+  email: string | null;
+  dueAt: string | null;
+  notes: string | null;
+  payments?: PosPaymentLineRequest[] | null;
+}
+
+export interface CollectBookingPaymentRequest {
+  amount: number;
+  paymentMethod: string;
+  referenceNo: string | null;
+  notes: string | null;
+}
+
+export interface CompleteBookingRequest {
+  sendToFbr: boolean;
+}
+
+export interface RefundSaleRequest {
+  reason: string | null;
+  returnToInventory: boolean;
 }
 
 export interface SaleLine {
@@ -482,6 +791,42 @@ export interface StockAdjustmentRequest {
   productId: string;
   quantityDelta: number;
   reason: string;
+}
+
+export interface SaveStockTakeRequest {
+  productId: string;
+  countedQuantity: number;
+  notes: string | null;
+}
+
+export interface SaveStockTransferRequest {
+  fromBranchName: string;
+  toBranchName: string;
+  units: number;
+  expectedAt: string | null;
+  status: string;
+  notes: string | null;
+}
+
+export interface SaveGoodsReceiptRequest {
+  purchaseOrderNo: string;
+  vendorName: string;
+  warehouseName: string;
+  lineCount: number;
+  receivedUnits: number;
+  varianceUnits: number;
+  status: string;
+  notes: string | null;
+}
+
+export interface SaveGatePassRequest {
+  movementType: string;
+  warehouseName: string;
+  destinationName: string;
+  referenceNo: string;
+  units: number;
+  status: string;
+  notes: string | null;
 }
 
 export interface SaveWorkspaceUserRequest {

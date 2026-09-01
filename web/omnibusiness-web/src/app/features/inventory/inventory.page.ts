@@ -1,13 +1,13 @@
-import { CommonModule, CurrencyPipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { InventoryImportResult, InventoryItem, InventoryOverview, SaveProductRequest } from '../../core/models';
+import { InventoryImportResult, InventoryItem, InventoryOverview, InventoryUsageInsight, SaveProductRequest } from '../../core/models';
 import { WorkspaceApiService } from '../../core/workspace-api.service';
 
 @Component({
   selector: 'app-inventory-page',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, FormsModule],
+  imports: [CommonModule, CurrencyPipe, DatePipe, FormsModule],
   templateUrl: './inventory.page.html',
   styleUrl: './inventory.page.scss',
 })
@@ -20,27 +20,115 @@ export class InventoryPageComponent {
   protected readonly errorMessage = signal('');
   protected readonly successMessage = signal('');
   protected readonly importWarnings = signal<string[]>([]);
+  protected readonly searchTerm = signal('');
+  protected readonly selectedWarehouseFilter = signal('all');
+  protected readonly selectedCategoryFilter = signal('all');
+
+  protected readonly selectedProduct = computed(() =>
+    this.inventory()?.items.find((item) => item.productId === this.selectedProductId()) ?? null,
+  );
+
+  protected readonly filteredItems = computed(() => {
+    const data = this.inventory();
+    if (!data) {
+      return [];
+    }
+
+    const query = this.searchTerm().trim().toLowerCase();
+    const warehouse = this.selectedWarehouseFilter();
+    const category = this.selectedCategoryFilter();
+
+    return data.items.filter((item) => {
+      const matchesWarehouse = warehouse === 'all' || item.warehouse === warehouse;
+      const matchesCategory = category === 'all' || item.category === category;
+      const matchesQuery =
+        query.length === 0 ||
+        item.productName.toLowerCase().includes(query) ||
+        item.sku.toLowerCase().includes(query) ||
+        item.visualCode.toLowerCase().includes(query);
+
+      return matchesWarehouse && matchesCategory && matchesQuery;
+    });
+  });
+
+  protected readonly inventorySummary = computed(() => {
+    const inventory = this.inventory();
+    const items = inventory?.items ?? [];
+    const fallbackLowStockCount = items.filter((item) => item.available <= item.reorderLevel).length;
+    const fallbackTotalValue = items.reduce((sum, item) => sum + item.value, 0);
+    const quickReadyCount = items.filter((item) => item.available > 0).length;
+    const metrics = inventory?.metrics;
+
+    return {
+      totalProducts: metrics?.totalProducts ?? items.length,
+      lowStockCount: metrics?.lowStockCount ?? fallbackLowStockCount,
+      totalValue: metrics?.totalValue ?? fallbackTotalValue,
+      quickReadyCount,
+      warehouseCount: metrics?.warehouseCount ?? inventory?.warehouses.length ?? 0,
+      categoryCount: metrics?.categoryCount ?? inventory?.categories.length ?? 0,
+      stockTakeCount30Days: metrics?.stockTakeCount30Days ?? 0,
+      turnoverRatio30Days: metrics?.turnoverRatio30Days ?? 0,
+    };
+  });
 
   protected productForm: SaveProductRequest = this.createEmptyProduct();
   protected adjustmentProductId = '';
   protected adjustmentDelta = 1;
   protected adjustmentReason = 'Manual adjustment';
+  protected stockTakeProductId = '';
+  protected stockTakeCountedQuantity = 0;
+  protected stockTakeNotes = '';
 
   constructor() {
     this.loadInventory();
   }
 
   protected statusClass(item: InventoryItem): string {
-    const normalized = item.status.toLowerCase();
-    if (normalized.includes('low')) {
+    return this.labelStatusClass(item.status);
+  }
+
+  protected labelStatusClass(status: string): string {
+    const normalized = status.toLowerCase();
+
+    if (normalized.includes('loss') || normalized.includes('low') || normalized.includes('out')) {
       return 'status-chip error';
     }
 
-    if (normalized.includes('out')) {
+    if (normalized.includes('pending') || normalized.includes('tight') || normalized.includes('review')) {
+      return 'status-chip warning';
+    }
+
+    return 'status-chip success';
+  }
+
+  protected coverageClass(label: string): string {
+    const normalized = label.toLowerCase();
+
+    if (normalized.includes('urgent') || normalized.includes('out')) {
+      return 'status-chip error';
+    }
+
+    if (normalized.includes('tight')) {
+      return 'status-chip warning';
+    }
+
+    if (normalized.includes('deep')) {
       return 'status-chip neutral';
     }
 
     return 'status-chip success';
+  }
+
+  protected varianceClass(value: number): string {
+    if (value < 0) {
+      return 'text-danger';
+    }
+
+    if (value > 0) {
+      return 'text-success';
+    }
+
+    return 'text-muted';
   }
 
   protected selectProduct(item: InventoryItem): void {
@@ -54,18 +142,27 @@ export class InventoryPageComponent {
       inHand: item.inHand,
       reserved: item.reserved,
       reorderLevel: item.reorderLevel,
-      isFavorite: false,
-      isQuickSale: true,
+      isFavorite: item.isFavorite,
+      isQuickSale: item.isQuickSale,
       visualCode: item.visualCode,
     };
     this.adjustmentProductId = item.productId;
     this.adjustmentDelta = 1;
     this.adjustmentReason = 'Manual adjustment';
+    this.stockTakeProductId = item.productId;
+    this.stockTakeCountedQuantity = item.inHand;
+    this.stockTakeNotes = `Cycle count for ${item.productName}`;
   }
 
   protected startNewProduct(): void {
     this.selectedProductId.set(null);
     this.productForm = this.createEmptyProduct();
+  }
+
+  protected clearFilters(): void {
+    this.searchTerm.set('');
+    this.selectedWarehouseFilter.set('all');
+    this.selectedCategoryFilter.set('all');
   }
 
   protected handleInventoryImport(event: Event): void {
@@ -100,8 +197,8 @@ export class InventoryPageComponent {
   protected downloadTemplate(): void {
     const csvTemplate = [
       'SKU,Name,Category,Unit Price,Warehouse,In Hand,Reserved,Reorder Level,Is Favorite,Is Quick Sale,Visual Code',
-      'SKU-1001,Sample Product,General,1250,Main Warehouse,10,0,5,Yes,Yes,PROD01',
-      'SKU-1002,Second Product,Grocery,250,Main Warehouse,40,2,8,No,Yes,PROD02',
+      'MED-1001,Paracetamol 500mg,Pharmacy,145,Main Warehouse,120,8,35,Yes,Yes,PAR500',
+      'MED-1002,Augmentin 625mg,Pharmacy,585,Main Warehouse,42,3,18,No,Yes,AUG625',
     ].join('\n');
 
     const blob = new Blob([csvTemplate], { type: 'text/csv;charset=utf-8' });
@@ -127,17 +224,18 @@ export class InventoryPageComponent {
       reorderLevel: Number(this.productForm.reorderLevel),
     };
 
-    const operation = this.selectedProductId()
-      ? this.workspaceApi.updateProduct(this.selectedProductId()!, request)
+    const selectedProductId = this.selectedProductId();
+    const operation = selectedProductId
+      ? this.workspaceApi.updateProduct(selectedProductId, request)
       : this.workspaceApi.createProduct(request);
 
     operation.subscribe({
       next: (inventory) => {
-        this.inventory.set(inventory);
+        this.applyInventoryOverview(inventory, selectedProductId);
         this.loading.set(false);
-        this.successMessage.set(this.selectedProductId() ? 'Product updated successfully.' : 'Product created successfully.');
-        if (!this.selectedProductId()) {
-          this.startNewProduct();
+        this.successMessage.set(selectedProductId ? 'Product updated successfully.' : 'Product created successfully.');
+        if (!selectedProductId) {
+          this.productForm = this.createEmptyProduct();
         }
       },
       error: (error) => {
@@ -166,12 +264,42 @@ export class InventoryPageComponent {
       })
       .subscribe({
         next: (inventory) => {
-          this.inventory.set(inventory);
+          this.applyInventoryOverview(inventory, this.adjustmentProductId);
           this.loading.set(false);
           this.successMessage.set('Stock adjustment saved successfully.');
         },
         error: (error) => {
           this.errorMessage.set(error.error?.message ?? 'Stock adjustment save nahi ho saka.');
+          this.loading.set(false);
+        },
+      });
+  }
+
+  protected applyStockTake(): void {
+    if (!this.stockTakeProductId) {
+      this.errorMessage.set('Stock take ke liye pehle product select karein.');
+      return;
+    }
+
+    this.loading.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    this.importWarnings.set([]);
+
+    this.workspaceApi
+      .createStockTake({
+        productId: this.stockTakeProductId,
+        countedQuantity: Number(this.stockTakeCountedQuantity),
+        notes: this.stockTakeNotes.trim() || null,
+      })
+      .subscribe({
+        next: (inventory) => {
+          this.applyInventoryOverview(inventory, this.stockTakeProductId);
+          this.loading.set(false);
+          this.successMessage.set('Stock take posted successfully.');
+        },
+        error: (error) => {
+          this.errorMessage.set(error.error?.message ?? 'Stock take save nahi ho saka.');
           this.loading.set(false);
         },
       });
@@ -184,8 +312,31 @@ export class InventoryPageComponent {
     this.applyAdjustment();
   }
 
+  protected loadIntoStockTake(item: InventoryItem): void {
+    this.selectProduct(item);
+  }
+
+  protected loadLowStockItem(productId: string): void {
+    const item = this.inventory()?.items.find((candidate) => candidate.productId === productId);
+    if (item) {
+      this.selectProduct(item);
+    }
+  }
+
   protected reload(): void {
     this.loadInventory();
+  }
+
+  protected usageTrendLabel(item: InventoryUsageInsight): string {
+    if (item.soldUnits30Days > 0) {
+      return `${item.soldUnits30Days} sold / 30d`;
+    }
+
+    if (item.netAdjustment30Days !== 0) {
+      return `${item.netAdjustment30Days > 0 ? '+' : ''}${item.netAdjustment30Days} adj / 30d`;
+    }
+
+    return 'No movement';
   }
 
   private createEmptyProduct(): SaveProductRequest {
@@ -210,17 +361,9 @@ export class InventoryPageComponent {
 
     this.workspaceApi.getInventory().subscribe({
       next: (inventory) => {
-        this.inventory.set(inventory);
+        this.applyInventoryOverview(inventory, this.selectedProductId());
         this.loading.set(false);
         this.importWarnings.set([]);
-        if (inventory.items.length > 0 && !this.selectedProductId()) {
-          this.selectProduct(inventory.items[0]);
-          return;
-        }
-
-        if (inventory.items.length === 0) {
-          this.startNewProduct();
-        }
       },
       error: () => {
         this.errorMessage.set('Inventory load nahi ho saki. API run aur login session check karein.');
@@ -230,18 +373,31 @@ export class InventoryPageComponent {
   }
 
   private applyImportResult(result: InventoryImportResult): void {
-    this.inventory.set(result.inventory);
+    this.applyInventoryOverview(result.inventory);
     this.loading.set(false);
     this.importWarnings.set(result.warnings);
     this.successMessage.set(
       `${result.importedCount} row(s) processed. ${result.createdCount} created, ${result.updatedCount} updated.`,
     );
+  }
 
-    if (result.inventory.items.length > 0) {
-      this.selectProduct(result.inventory.items[0]);
+  private applyInventoryOverview(overview: InventoryOverview, preferredProductId?: string | null): void {
+    this.inventory.set(overview);
+    const targetId = preferredProductId ?? this.selectedProductId();
+    const selected = targetId
+      ? overview.items.find((item) => item.productId === targetId) ?? null
+      : overview.items[0] ?? null;
+
+    if (selected) {
+      this.selectProduct(selected);
       return;
     }
 
-    this.startNewProduct();
+    this.selectedProductId.set(null);
+    this.productForm = this.createEmptyProduct();
+    this.adjustmentProductId = '';
+    this.stockTakeProductId = '';
+    this.stockTakeCountedQuantity = 0;
+    this.stockTakeNotes = '';
   }
 }

@@ -22,6 +22,18 @@ type SupportMessage = {
   text: string;
 };
 
+type NavigationItem = {
+  label: string;
+  icon: string;
+  route: string;
+  moduleKey: string;
+};
+
+type WorkspaceQuickStat = {
+  label: string;
+  value: string;
+};
+
 const SUPPORT_HIGHLIGHTS: SupportHighlight[] = [
   {
     icon: 'rocket_launch',
@@ -59,6 +71,16 @@ export class ShellComponent {
   protected readonly authService = inject(AuthService);
   protected readonly themeService = inject(ThemeService);
   private readonly workspaceApi = inject(WorkspaceApiService);
+  private readonly commerceRoutes = new Set([
+    '/dashboard',
+    '/sales',
+    '/pos',
+    '/customers',
+    '/procurement',
+    '/warehouse',
+    '/operations',
+    '/inventory',
+  ]);
   protected readonly isSidebarOpen = signal(false);
   protected readonly isSupportOpen = signal(false);
   protected readonly supportDraft = signal('');
@@ -74,12 +96,14 @@ export class ShellComponent {
   ]);
   private supportMessageSequence = 1;
 
-  protected readonly navigationItems = [
+  protected readonly navigationItems: NavigationItem[] = [
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard', moduleKey: 'dashboard-analytics' },
+    { label: 'Reports', icon: 'analytics', route: '/reports', moduleKey: 'reporting-suite' },
     { label: 'Sales', icon: 'receipt_long', route: '/sales', moduleKey: 'order-listing' },
     { label: 'POS', icon: 'shopping_cart', route: '/pos', moduleKey: 'pos-checkout' },
     { label: 'Customers', icon: 'group', route: '/customers', moduleKey: 'customer-profiles' },
     { label: 'Procurement', icon: 'local_shipping', route: '/procurement', moduleKey: 'supplier-management' },
+    { label: 'Warehouse Ops', icon: 'warehouse', route: '/warehouse', moduleKey: 'stock-transfer-desk' },
     { label: 'Operations Hub', icon: 'policy', route: '/operations', moduleKey: 'fbr-compliance' },
     { label: 'Users & Access', icon: 'badge', route: '/users', moduleKey: 'employee-management' },
     { label: 'Inventory', icon: 'inventory_2', route: '/inventory', moduleKey: 'inventory-core' },
@@ -104,6 +128,28 @@ export class ShellComponent {
     const currentRole = this.authService.currentUser()?.role ?? context.user.role;
     return this.navigationItems.filter((item) =>
       !item.moduleKey || (enabledModules.has(item.moduleKey) && canAccessModule(currentRole, item.moduleKey)));
+  });
+
+  protected readonly commerceNavigationItems = computed(() =>
+    this.visibleNavigationItems().filter((item) => this.commerceRoutes.has(item.route)),
+  );
+
+  protected readonly controlNavigationItems = computed(() =>
+    this.visibleNavigationItems().filter((item) => !this.commerceRoutes.has(item.route)),
+  );
+
+  protected readonly workspaceQuickStats = computed<WorkspaceQuickStat[]>(() => {
+    const context = this.workspaceContext();
+    if (!context) {
+      return [];
+    }
+
+    return [
+      { label: 'Plan', value: context.access.planName },
+      { label: 'Modules', value: `${context.access.enabledModules.length}` },
+      { label: 'Branches', value: `${context.branches.length}` },
+      { label: 'Role', value: this.authService.currentUser()?.role ?? context.user.role },
+    ];
   });
 
   constructor() {
