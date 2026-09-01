@@ -8,6 +8,10 @@
       </div>
       <div class="report-actions">
         <span class="status-chip neutral">Updated {{ data.generatedAt | date:'MMM d, h:mm a' }}</span>
+        <button class="secondary-button compact-button" type="button" (click)="printCurrentReport()">
+          <span class="material-symbols-outlined">print</span>
+          Print report
+        </button>
         <button class="primary-button compact-button" type="button" (click)="exportCurrentReport()">
           <span class="material-symbols-outlined">download</span>
           Export current CSV
@@ -68,6 +72,50 @@
           <div><strong>Ready for detailed reporting</strong><p>Is category ki detail automatically populate hogi jab related invoices, stock movements, expenses ya ledger entries create hon.</p></div>
         </section>
       }
+
+      <section class="surface-card register-card">
+        <div class="register-header">
+          <div>
+            <p class="eyebrow">Printable operational register</p>
+            <h2>{{ registerMode() === 'transactions' ? 'Sales, tax & payment register' : 'General party ledger' }}</h2>
+            <p>Reference-wise detail, suitable for owner review, accountant handover and printing.</p>
+          </div>
+          <div class="register-controls">
+            <div class="register-switch" role="group" aria-label="Register type">
+              <button type="button" [class.active]="registerMode() === 'transactions'" (click)="setRegisterMode('transactions')">Sales register</button>
+              <button type="button" [class.active]="registerMode() === 'ledger'" (click)="setRegisterMode('ledger')">Ledger</button>
+            </div>
+            <label class="report-search">
+              <span class="material-symbols-outlined">search</span>
+              <input type="search" placeholder="Search reference, party, status..." (input)="updateQuery($event)">
+            </label>
+          </div>
+        </div>
+
+        @if (registerMode() === 'transactions') {
+          <div class="table-scroll report-register-table">
+            <table>
+              <thead><tr><th>Date</th><th>Invoice</th><th>Customer</th><th>Tender</th><th>Items</th><th>Subtotal</th><th>Discount</th><th>Tax</th><th>Total</th><th>Profit</th><th>FBR</th></tr></thead>
+              <tbody>
+                @for (row of filteredTransactions(); track row.referenceNo) {
+                  <tr><td>{{ row.occurredAt | date:'dd MMM, yyyy' }}</td><td><strong>{{ row.referenceNo }}</strong><small>{{ row.status }}</small></td><td>{{ row.customerName }}</td><td>{{ row.paymentMethod }}</td><td>{{ row.itemCount }}</td><td>{{ row.subtotal | currency:'PKR':'symbol-narrow':'1.0-0' }}</td><td class="negative">{{ row.discount | currency:'PKR':'symbol-narrow':'1.0-0' }}</td><td>{{ row.tax | currency:'PKR':'symbol-narrow':'1.0-0' }}</td><td><strong>{{ row.total | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong></td><td class="positive">{{ row.grossProfit | currency:'PKR':'symbol-narrow':'1.0-0' }}</td><td><span class="status-chip neutral">{{ row.fbrStatus }}</span></td></tr>
+                } @empty { <tr><td colspan="11" class="empty-row">No invoices matched your search.</td></tr> }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="table-scroll report-register-table">
+            <table>
+              <thead><tr><th>Date</th><th>Reference</th><th>Party / account</th><th>Entry type</th><th>Debit</th><th>Credit</th><th>Running balance</th><th>Status</th><th>Narration</th></tr></thead>
+              <tbody>
+                @for (entry of filteredLedgerEntries(); track entry.referenceNo) {
+                  <tr><td>{{ entry.occurredAt | date:'dd MMM, yyyy' }}</td><td><strong>{{ entry.referenceNo }}</strong></td><td>{{ entry.party }}</td><td>{{ entry.entryType }}</td><td class="negative">{{ entry.debit | currency:'PKR':'symbol-narrow':'1.0-0' }}</td><td class="positive">{{ entry.credit | currency:'PKR':'symbol-narrow':'1.0-0' }}</td><td><strong>{{ entry.balance | currency:'PKR':'symbol-narrow':'1.0-0' }}</strong></td><td><span class="status-chip neutral">{{ entry.status }}</span></td><td>{{ entry.notes }}</td></tr>
+                } @empty { <tr><td colspan="9" class="empty-row">No ledger entries matched your search.</td></tr> }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
     }
   </section>
 }

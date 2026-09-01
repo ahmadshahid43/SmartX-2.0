@@ -327,6 +327,35 @@ export interface ReportsHub {
   salesByItem: ReportTableRow[];
   salesByCategory: ReportTableRow[];
   paymentMethods: ReportTableRow[];
+  ledgerEntries: ReportLedgerEntry[];
+  transactions: ReportTransaction[];
+}
+
+export interface ReportLedgerEntry {
+  occurredAt: string;
+  referenceNo: string;
+  party: string;
+  entryType: string;
+  debit: number;
+  credit: number;
+  balance: number;
+  status: string;
+  notes: string;
+}
+
+export interface ReportTransaction {
+  occurredAt: string;
+  referenceNo: string;
+  customerName: string;
+  paymentMethod: string;
+  itemCount: number;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  grossProfit: number;
+  fbrStatus: string;
+  status: string;
 }
 
 export interface ReportSection {

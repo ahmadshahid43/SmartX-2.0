@@ -275,7 +275,9 @@ public sealed record ReportsHubDto(
     IReadOnlyList<ReportSectionDto> Sections,
     IReadOnlyList<ReportTableRowDto> SalesByItem,
     IReadOnlyList<ReportTableRowDto> SalesByCategory,
-    IReadOnlyList<ReportTableRowDto> PaymentMethods);
+    IReadOnlyList<ReportTableRowDto> PaymentMethods,
+    IReadOnlyList<ReportLedgerEntryDto> LedgerEntries,
+    IReadOnlyList<ReportTransactionDto> Transactions);
 
 public sealed record ReportSectionDto(
     string Key,
@@ -296,6 +298,31 @@ public sealed record ReportTableRowDto(
     decimal Amount,
     int Count,
     string SecondaryLabel = "");
+
+public sealed record ReportLedgerEntryDto(
+    DateTimeOffset OccurredAt,
+    string ReferenceNo,
+    string Party,
+    string EntryType,
+    decimal Debit,
+    decimal Credit,
+    decimal Balance,
+    string Status,
+    string Notes);
+
+public sealed record ReportTransactionDto(
+    DateTimeOffset OccurredAt,
+    string ReferenceNo,
+    string CustomerName,
+    string PaymentMethod,
+    int ItemCount,
+    decimal Subtotal,
+    decimal Discount,
+    decimal Tax,
+    decimal Total,
+    decimal GrossProfit,
+    string FbrStatus,
+    string Status);
 
 public sealed record TrendPointDto(
     string Label,

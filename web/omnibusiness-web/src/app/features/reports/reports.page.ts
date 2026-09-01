@@ -2,7 +2,7 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of } from 'rxjs';
-import { ReportMetric, ReportTableRow } from '../../core/models';
+import { ReportLedgerEntry, ReportMetric, ReportTableRow, ReportTransaction } from '../../core/models';
 import { WorkspaceApiService } from '../../core/workspace-api.service';
 
 @Component({
@@ -15,6 +15,8 @@ import { WorkspaceApiService } from '../../core/workspace-api.service';
 export class ReportsPageComponent {
   private readonly workspaceApi = inject(WorkspaceApiService);
   protected readonly activeSection = signal('sales');
+  protected readonly registerMode = signal<'transactions' | 'ledger'>('transactions');
+  protected readonly query = signal('');
   protected readonly reports = toSignal(
     this.workspaceApi.getReportsHub().pipe(catchError(() => of(null))),
     { initialValue: null },
@@ -39,10 +41,26 @@ export class ReportsPageComponent {
       default: return 'Detailed activity';
     }
   });
+  protected readonly filteredTransactions = computed<ReportTransaction[]>(() => {
+    const query = this.query().trim().toLowerCase();
+    return (this.reports()?.transactions ?? []).filter((entry) => !query ||
+      [entry.referenceNo, entry.customerName, entry.paymentMethod, entry.fbrStatus, entry.status]
+        .some((value) => value.toLowerCase().includes(query)));
+  });
+  protected readonly filteredLedgerEntries = computed<ReportLedgerEntry[]>(() => {
+    const query = this.query().trim().toLowerCase();
+    return (this.reports()?.ledgerEntries ?? []).filter((entry) => !query ||
+      [entry.referenceNo, entry.party, entry.entryType, entry.status, entry.notes]
+        .some((value) => value.toLowerCase().includes(query)));
+  });
 
   protected selectSection(key: string): void {
     this.activeSection.set(key);
+    this.registerMode.set(key === 'finance' || key === 'supply' ? 'ledger' : 'transactions');
   }
+
+  protected setRegisterMode(mode: 'transactions' | 'ledger'): void { this.registerMode.set(mode); }
+  protected updateQuery(event: Event): void { this.query.set((event.target as HTMLInputElement).value); }
 
   protected metricValue(metric: ReportMetric): string {
     return metric.format === 'currency'
@@ -60,5 +78,9 @@ export class ReportsPageComponent {
     link.download = `smartx-${section.key}-report.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
+  }
+
+  protected printCurrentReport(): void {
+    window.print();
   }
 }

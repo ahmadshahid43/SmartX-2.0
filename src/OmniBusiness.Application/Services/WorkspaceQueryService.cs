@@ -214,6 +214,56 @@ public sealed class WorkspaceQueryService(IWorkspaceRepository workspaceReposito
             .OrderByDescending(group => group.Sum(payment => payment.Amount))
             .Select(group => new ReportTableRowDto(group.Key, group.Sum(payment => payment.Amount), group.Count(), "tenders"))
             .ToArray();
+        var transactions = sales
+            .OrderByDescending(sale => sale.OccurredAt)
+            .Select(sale => new ReportTransactionDto(
+                sale.OccurredAt,
+                sale.ReferenceNo,
+                sale.CustomerName,
+                sale.PaymentMethod,
+                sale.ItemCount,
+                sale.Lines?.Sum(line => line.LineTotal) ?? Math.Max(sale.Amount - sale.Tax + sale.Discount, 0),
+                sale.Discount,
+                sale.Tax,
+                sale.Amount,
+                sale.GrossProfit,
+                sale.FbrStatus,
+                sale.Status))
+            .ToArray();
+        var ledgerEntries = new List<ReportLedgerEntryDto>();
+        decimal runningBalance = 0;
+        foreach (var sale in completedSales.OrderBy(sale => sale.OccurredAt))
+        {
+            var amount = GetNetTransactionAmount(sale);
+            runningBalance += amount;
+            ledgerEntries.Add(new ReportLedgerEntryDto(
+                sale.OccurredAt,
+                sale.ReferenceNo,
+                sale.CustomerName,
+                "Sales receipt",
+                0,
+                amount,
+                runningBalance,
+                sale.PaymentStatus,
+                $"{sale.PaymentMethod} | FBR: {sale.FbrStatus}"));
+        }
+        foreach (var purchaseOrder in purchaseOrders.OrderBy(order => order.CreatedAt))
+        {
+            runningBalance -= purchaseOrder.TotalAmount;
+            ledgerEntries.Add(new ReportLedgerEntryDto(
+                purchaseOrder.CreatedAt,
+                purchaseOrder.PurchaseOrderNo,
+                purchaseOrder.VendorName,
+                "Purchase commitment",
+                purchaseOrder.TotalAmount,
+                0,
+                runningBalance,
+                purchaseOrder.Status,
+                $"{purchaseOrder.OrderedUnits} units | {purchaseOrder.ReceivedUnits} received"));
+        }
+        ledgerEntries = ledgerEntries
+            .OrderByDescending(entry => entry.OccurredAt)
+            .ToList();
 
         var sections = new[]
         {
@@ -263,7 +313,7 @@ public sealed class WorkspaceQueryService(IWorkspaceRepository workspaceReposito
             })
         };
 
-        return new ReportsHubDto(DateTimeOffset.Now, sections, salesByItem, salesByCategory, paymentMethods);
+        return new ReportsHubDto(DateTimeOffset.Now, sections, salesByItem, salesByCategory, paymentMethods, ledgerEntries, transactions);
     }
 
     public async Task<InventoryOverviewDto> GetInventoryOverviewAsync(Guid tenantId, CancellationToken cancellationToken)
