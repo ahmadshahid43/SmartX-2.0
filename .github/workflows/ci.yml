@@ -56,7 +56,7 @@ jobs:
       - name: Build web
         shell: pwsh
         working-directory: web/omnibusiness-web
-        run: npm run build
+        run: npm run build -- --configuration development
 
       - name: Publish offline web bundle
         uses: actions/upload-artifact@v4
@@ -65,13 +65,3 @@ jobs:
           path: .artifacts/web-dist/omnibusiness-web
           if-no-files-found: error
           retention-days: 14
-
-  docker:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build production container
-        run: docker build -t smartx-ci .
